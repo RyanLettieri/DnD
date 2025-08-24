@@ -1,0 +1,74 @@
+/* Global styles for the Tortle Manager application */
+
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to bottom right, #f9f9f9, #e0e0e0);
+    color: #333;
+}
+
+h1, h2, h3 {
+    color: #4a4a4a;
+}
+
+button {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.red {
+    background-color: #e57373;
+    color: white;
+}
+
+button.green {
+    background-color: #81c784;
+    color: white;
+}
+
+button.gray {
+    background-color: #b0bec5;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+.card {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hp-bar {
+    height: 20px;
+    border-radius: 5px;
+    background-color: #e0e0e0;
+    overflow: hidden;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.stat-display {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.tab {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 5px;
+    background-color: #f0f0f0;
+}
+
+.tab.active {
+    background-color: #d1c4e9;
+    font-weight: bold;
+}

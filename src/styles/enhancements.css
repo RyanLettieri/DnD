@@ -1,0 +1,253 @@
+/* Medieval Fantasy Visual Enhancements */
+
+/* Medieval Font Classes */
+.medieval-header {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.fantasy-title {
+  font-family: 'Uncial Antiqua', cursive;
+  font-weight: 400;
+}
+
+.sharp-accent {
+  font-family: 'MedievalSharp', cursive;
+  font-weight: 400;
+}
+
+/* Enhanced Parchment Card with Textures */
+.parchment-card-enhanced {
+  background: 
+    var(--paper-grain),
+    var(--ink-stain),
+    /* Darker, more transparent parchment to reduce brightness */
+    linear-gradient(
+      135deg,
+      rgba(244, 241, 232, 0.78) 0%,
+      rgba(232, 224, 208, 0.78) 25%,
+      rgba(240, 237, 228, 0.78) 50%,
+      rgba(232, 224, 208, 0.78) 75%,
+      rgba(244, 241, 232, 0.78) 100%
+    );
+  box-shadow: 
+    inset 0 1px 3px rgba(139, 69, 19, 0.1),
+    0 2px 8px rgba(60, 36, 21, 0.12),
+    0 4px 16px rgba(60, 36, 21, 0.03);
+  border: 1px solid rgba(139, 69, 19, 0.2);
+  position: relative;
+}
+
+/* Paper Grain Overlay */
+.paper-grain::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: var(--paper-grain);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Ink Stain Effects */
+.ink-stain-corner::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(60, 36, 21, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ink-stain-corner.top-left::after {
+  top: -10px;
+  left: -10px;
+}
+
+.ink-stain-corner.top-right::after {
+  top: -10px;
+  right: -10px;
+}
+
+.ink-stain-corner.bottom-left::after {
+  bottom: -10px;
+  left: -10px;
+}
+
+.ink-stain-corner.bottom-right::after {
+  bottom: -10px;
+  right: -10px;
+}
+
+/* Torn Paper Edge Effect */
+.torn-edge {
+  position: relative;
+  overflow: visible;
+}
+
+.torn-edge::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: url('data:image/svg+xml,%3Csvg width="100" height="8" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0,4 Q2,1 4,4 T8,4 T12,4 T16,4 T20,4 T24,4 T28,4 T32,4 T36,4 T40,4 T44,4 T48,4 T52,4 T56,4 T60,4 T64,4 T68,4 T72,4 T76,4 T80,4 T84,4 T88,4 T92,4 T96,4 T100,4" stroke="%23E8E0D0" stroke-width="1" fill="none"/%3E%3C/svg%3E') repeat-x;
+  background-size: 20px 8px;
+}
+
+.torn-edge.bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: url('data:image/svg+xml,%3Csvg width="100" height="8" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0,4 Q2,7 4,4 T8,4 T12,4 T16,4 T20,4 T24,4 T28,4 T32,4 T36,4 T40,4 T44,4 T48,4 T52,4 T56,4 T60,4 T64,4 T68,4 T72,4 T76,4 T80,4 T84,4 T88,4 T92,4 T96,4 T100,4" stroke="%23E8E0D0" stroke-width="1" fill="none"/%3E%3C/svg%3E') repeat-x;
+  background-size: 20px 8px;
+}
+
+/* Wax Seal Stamp */
+.wax-seal {
+  position: relative;
+  display: inline-block;
+}
+
+.wax-seal::before {
+  content: '🔨';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(circle, #8B0000 0%, #660000 70%, #440000 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #FFD700;
+  box-shadow: 
+    0 2px 4px rgba(139, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 215, 0, 0.3);
+  z-index: 10;
+}
+
+/* Spell Scroll Styling */
+.spell-scroll {
+  background: 
+    linear-gradient(to bottom, #F8F5F0 0%, #F4F1E8 100%);
+  border-left: 3px solid #CD7F32;
+  border-right: 3px solid #CD7F32;
+  position: relative;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+
+.spell-scroll::before,
+.spell-scroll::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: url('data:image/svg+xml,%3Csvg width="100" height="8" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0,4 Q5,1 10,4 T20,4 T30,4 T40,4 T50,4 T60,4 T70,4 T80,4 T90,4 T100,4" stroke="%23CD7F32" stroke-width="2" fill="none"/%3E%3C/svg%3E') repeat-x;
+}
+
+.spell-scroll::before {
+  top: -4px;
+}
+
+.spell-scroll::after {
+  bottom: -4px;
+  transform: scaleY(-1);
+}
+
+/* Illuminated Drop Cap */
+.drop-cap {
+  float: left;
+  font-family: 'Uncial Antiqua', cursive;
+  font-size: 3.5rem;
+  line-height: 3rem;
+  padding-right: 0.5rem;
+  padding-top: 0.25rem;
+  color: #CD7F32;
+  text-shadow: 2px 2px 4px rgba(60, 36, 21, 0.3);
+}
+
+/* Runic Divider */
+.runic-divider {
+  text-align: center;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.runic-divider::before {
+  content: '⚡ ⚒️ ⚡';
+  font-size: 1.2rem;
+  color: #CD7F32;
+  background: #F4F1E8;
+  padding: 0 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.runic-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent 0%, #CD7F32 20%, #CD7F32 80%, transparent 100%);
+  z-index: 0;
+}
+
+/* Artificer Workshop Border */
+.workshop-border {
+  border: 2px solid #CD7F32;
+  border-image: url('data:image/svg+xml,%3Csvg width="20" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0,0 L20,0 L20,20 L0,20 Z M2,2 L18,2 L18,18 L2,18 Z" fill="none" stroke="%23CD7F32" stroke-width="1"/%3E%3Cpath d="M10,2 L10,18 M2,10 L18,10" stroke="%23CD7F32" stroke-width="0.5" opacity="0.5"/%3E%3C/svg%3E') 2;
+  position: relative;
+}
+
+/* Magical Glow Enhancement */
+.magical-glow {
+  box-shadow: 
+    0 0 10px rgba(74, 144, 226, 0.3),
+    0 0 20px rgba(74, 144, 226, 0.2),
+    0 0 30px rgba(74, 144, 226, 0.1);
+  animation: magical-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes magical-pulse {
+  0% {
+    box-shadow: 
+      0 0 10px rgba(74, 144, 226, 0.3),
+      0 0 20px rgba(74, 144, 226, 0.2),
+      0 0 30px rgba(74, 144, 226, 0.1);
+  }
+  100% {
+    box-shadow: 
+      0 0 15px rgba(74, 144, 226, 0.4),
+      0 0 25px rgba(74, 144, 226, 0.3),
+      0 0 35px rgba(74, 144, 226, 0.2);
+  }
+}
+
+/* Aged Paper Texture */
+.aged-texture {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(139, 69, 19, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(139, 69, 19, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(139, 69, 19, 0.03) 0%, transparent 50%);
+}
+
+/* CSS Variables for Reusability */
+:root {
+  --paper-grain: url('data:image/svg+xml,%3Csvg width="200" height="200" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cfilter id="grain"%3E%3CfeTurbulence baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3CfeColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"/%3E%3C/filter%3E%3C/defs%3E%3Crect width="100%25" height="100%25" filter="url(%23grain)" opacity="0.03"/%3E%3C/svg%3E');
+  --ink-stain: radial-gradient(ellipse at top left, rgba(60, 36, 21, 0.15) 0%, transparent 40%), radial-gradient(ellipse at bottom right, rgba(60, 36, 21, 0.1) 0%, transparent 35%);
+}
