@@ -1,5 +1,6 @@
 const allSkills = [
   "Acrobatics",
+  "Animal Handling",
   "Arcana",
   "Athletics",
   "Deception",

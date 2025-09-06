@@ -42,7 +42,8 @@ const HPBar = ({ current, max, onUpdateHP, onDamage, onHeal, onEditMax }) => {
             style={{
               background: 'linear-gradient(to bottom, #7f1d1d, #991b1b, #b91c1c)',
               textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+              boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              fontSize: '1.5rem'
             }}
             title="Damage"
           >
@@ -54,7 +55,8 @@ const HPBar = ({ current, max, onUpdateHP, onDamage, onHeal, onEditMax }) => {
             style={{
               background: 'linear-gradient(to bottom, #14532d, #166534, #15803d)',
               textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+              boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              fontSize: '1.5rem',
             }}
             title="Heal"
           >
@@ -66,7 +68,8 @@ const HPBar = ({ current, max, onUpdateHP, onDamage, onHeal, onEditMax }) => {
             style={{
               background: 'linear-gradient(to bottom, #713f12, #854d0e, #9a5b0a)',
               textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+              boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              fontSize: '1.5rem'
             }}
             title="Edit Max HP"
           >

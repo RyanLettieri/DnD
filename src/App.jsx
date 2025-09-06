@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import usePersistentState from './hooks/usePersistentState';
 import './styles/enhancements.css';
 import HPBar from './components/HPBar';
+import HitDice from './components/HitDice';
+import BackgroundScribe from './components/BackgroundScribe';
 import Button from './components/Button';
 import Card from './components/Card';
 import Tabs from './components/Tabs';
@@ -27,6 +29,7 @@ import { DEFAULT_EQUIPMENT } from './data/equipment';
 
 const allSkills = [
   "Acrobatics",
+  "Animal Handling",
   "Arcana",
   "Athletics",
   "Deception",
@@ -64,6 +67,9 @@ const DEFAULT_STATS = {
   HP: 20,
   MaxHP: 20,
   tempHP: 0,
+  // Hit Dice
+  hitDiceSize: 8, // default for Artificer (d8)
+  hitDiceSpent: 0,
   // Currency
   currency: {
     copper: 0,
@@ -91,6 +97,7 @@ const DEFAULT_NOTES = {
 
 const SKILL_ABILITIES = {
   "Acrobatics": "dexterity",
+  "Animal Handling": "wisdom",
   "Arcana": "intelligence",
   "Athletics": "strength",
   "Deception": "charisma",
@@ -115,6 +122,7 @@ export default function App() {
   const [proficiencies, setProficiencies] = usePersistentState("proficiencies", {
     // Initialize all skills as not proficient
     "Acrobatics": false,
+    "Animal Handling": false,
     "Arcana": false,
     "Athletics": false,
     "Deception": false,
@@ -163,6 +171,7 @@ export default function App() {
 
   const tabs = [
     { id: 'main', label: 'Character' },
+    { id: 'background', label: 'Background' },
     { id: 'combat', label: 'Combat' },
     { id: 'actions', label: 'Actions' },
     { id: 'spells', label: 'Spells' },
@@ -230,6 +239,31 @@ export default function App() {
         </div>
       </div>
 
+      {/* Hit Dice Section */}
+      <Card>
+        <Card.Content>
+          <HitDice
+            level={stats.level}
+            hitDiceSize={stats.hitDiceSize || 8}
+            hitDiceSpent={stats.hitDiceSpent || 0}
+            conMod={getModifier(parseInt(stats.constitution) || 10)}
+            onApplyHealing={(amount) =>
+              setStats(prev => ({
+                ...prev,
+                HP: Math.min(prev.MaxHP, (Number(prev.HP) || 0) + Math.max(0, Number(amount) || 0))
+              }))
+            }
+            onChange={({ hitDiceSize, hitDiceSpent }) =>
+              setStats(prev => ({
+                ...prev,
+                hitDiceSize: hitDiceSize ?? prev.hitDiceSize,
+                hitDiceSpent: hitDiceSpent ?? prev.hitDiceSpent
+              }))
+            }
+          />
+        </Card.Content>
+      </Card>
+
       <Card>
         <Card.Content>
           <div className="parchment-card p-6 rounded-lg">
@@ -239,7 +273,8 @@ export default function App() {
                   <img 
                     src="/tortle-portrait.png" 
                     alt="Tortle Portrait"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center"
+                    style={{ objectPosition: 'center 20%' }}
                   />
                 </div>
               </div>
@@ -359,6 +394,12 @@ export default function App() {
     <EnhancedNotes />
   );
 
+  const renderBackgroundTab = () => (
+    <div className="space-y-6">
+      <BackgroundScribe />
+    </div>
+  );
+
   const renderCombatTab = () => (
     <div className="space-y-6">
       <Card>
@@ -371,7 +412,9 @@ export default function App() {
             </div>
             <div className="parchment-card p-4 rounded-lg text-center">
               <div className="parchment-text-light text-sm font-semibold">Initiative</div>
-              <div className="parchment-text text-2xl font-bold">{Number(stats.initiative) || 0}</div>
+              <div className="parchment-text text-2xl font-bold">
+                {(getModifier(parseInt(stats.dexterity) || 10) + (Number(stats.initiative) || 0))}
+              </div>
             </div>
             <div className="parchment-card p-4 rounded-lg text-center">
               <div className="parchment-text-light text-sm font-semibold">Speed</div>
@@ -382,6 +425,30 @@ export default function App() {
               <div className="parchment-text text-2xl font-bold">+{Number(stats.proficiencyBonus) || 2}</div>
             </div>
           </div>
+        </Card.Content>
+      </Card>
+      <Card>
+        <Card.Header>Hit Dice</Card.Header>
+        <Card.Content>
+          <HitDice
+            level={stats.level}
+            hitDiceSize={stats.hitDiceSize || 8}
+            hitDiceSpent={stats.hitDiceSpent || 0}
+            conMod={getModifier(parseInt(stats.constitution) || 10)}
+            onApplyHealing={(amount) =>
+              setStats(prev => ({
+                ...prev,
+                HP: Math.min(prev.MaxHP, (Number(prev.HP) || 0) + Math.max(0, Number(amount) || 0))
+              }))
+            }
+            onChange={({ hitDiceSize, hitDiceSpent }) =>
+              setStats(prev => ({
+                ...prev,
+                hitDiceSize: hitDiceSize ?? prev.hitDiceSize,
+                hitDiceSpent: hitDiceSpent ?? prev.hitDiceSpent
+              }))
+            }
+          />
         </Card.Content>
       </Card>
       <Card>
@@ -596,6 +663,8 @@ export default function App() {
     switch (activeTab) {
       case 'main':
         return renderMainTab();
+      case 'background':
+        return renderBackgroundTab();
       case 'combat':
         return renderCombatTab();
       case 'actions':
