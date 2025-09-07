@@ -11,9 +11,23 @@ const EnhancedNotes = () => {
   const [background, setBackground] = usePersistentState('characterBackground', '');
   
   const [newSession, setNewSession] = useState({ title: '', date: '', notes: '' });
-  const [newCharacter, setNewCharacter] = useState({ name: '', role: '', description: '', notes: '', status: 'alive' });
+  const [newCharacter, setNewCharacter] = useState({
+    name: '',
+    role: '',
+    race: '',
+    height: '',
+    weight: '',
+    gender: '',
+    characterClass: '',
+    description: '',
+    notes: '',
+    status: 'alive'
+  });
   const [newLocation, setNewLocation] = useState({ name: '', type: '', description: '', notes: '' });
   const [editingItem, setEditingItem] = useState(null);
+  const [collapsedSessions, setCollapsedSessions] = usePersistentState('collapsedSessions', {});
+  const [collapsedCharacters, setCollapsedCharacters] = usePersistentState('collapsedCharacters', {});
+  const [collapsedLocations, setCollapsedLocations] = usePersistentState('collapsedLocations', {});
 
   const addSession = () => {
     if (newSession.title.trim()) {
@@ -68,6 +82,48 @@ const EnhancedNotes = () => {
   // This function only exits edit mode (called by Done button)
   const finishEditing = () => {
     setEditingItem(null);
+  };
+
+  const toggleSessionCollapse = (id) => {
+    setCollapsedSessions(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleCharacterCollapse = (id) => {
+    setCollapsedCharacters(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const collapseAllSessions = () => {
+    const all = sessions.reduce((acc, s) => ({ ...acc, [s.id]: true }), {});
+    setCollapsedSessions(all);
+  };
+
+  const expandAllSessions = () => {
+    const all = sessions.reduce((acc, s) => ({ ...acc, [s.id]: false }), {});
+    setCollapsedSessions(all);
+  };
+
+  const collapseAllCharacters = () => {
+    const all = characters.reduce((acc, c) => ({ ...acc, [c.id]: true }), {});
+    setCollapsedCharacters(all);
+  };
+
+  const expandAllCharacters = () => {
+    const all = characters.reduce((acc, c) => ({ ...acc, [c.id]: false }), {});
+    setCollapsedCharacters(all);
+  };
+
+  const toggleLocationCollapse = (id) => {
+    setCollapsedLocations(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const collapseAllLocations = () => {
+    const all = locations.reduce((acc, l) => ({ ...acc, [l.id]: true }), {});
+    setCollapsedLocations(all);
+  };
+
+  const expandAllLocations = () => {
+    const all = locations.reduce((acc, l) => ({ ...acc, [l.id]: false }), {});
+    setCollapsedLocations(all);
   };
 
   const getStatusColor = (status) => {
@@ -182,24 +238,77 @@ const EnhancedNotes = () => {
                 </div>
 
                 {/* Sessions List */}
+                <div className="flex items-center justify-end gap-2 mb-2 flex-wrap">
+                  <button onClick={collapseAllSessions} className="text-xs px-2 py-1 parchment-card hover:shadow">Collapse All</button>
+                  <button onClick={expandAllSessions} className="text-xs px-2 py-1 parchment-card hover:shadow">Expand All</button>
+                </div>
                 <div className="space-y-3">
                   {sessions.map(session => (
                     <div key={session.id} className="parchment-card p-4 rounded-lg border border-artificerBronze/20">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="parchment-text font-semibold">{session.title}</h3>
-                          <div className="parchment-text-light text-sm">{session.date}</div>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                      {editingItem?.type === 'session' && editingItem?.id === session.id ? (
+                        // EDIT MODE
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={session.title}
+                            onChange={(e) => updateItemData('session', session.id, { title: e.target.value })}
+                            className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
+                            placeholder="Session Title"
+                          />
+                          <input
+                            type="date"
+                            value={session.date}
+                            onChange={(e) => updateItemData('session', session.id, { date: e.target.value })}
+                            className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
+                          />
+                          <textarea
+                            value={session.notes}
+                            onChange={(e) => updateItemData('session', session.id, { notes: e.target.value })}
+                            className="w-full h-24 parchment-card rounded p-2 parchment-text border border-artificerBronze/30 resize-none"
+                            placeholder="Session notes..."
+                          />
                           <button
-                            onClick={() => deleteItem('session', session.id)}
-                            className="text-red-400 hover:text-red-300 text-sm"
+                            onClick={finishEditing}
+                            className="mt-2 bg-tortleGreen/20 px-3 py-1 rounded text-white hover:bg-tortleGreen/30"
                           >
-                            Delete
+                            Done
                           </button>
                         </div>
-                      </div>
-                      <p className="parchment-text-light text-sm">{session.notes}</p>
+                      ) : (
+                        // VIEW MODE
+                        <>
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="parchment-text font-semibold">{session.title}</h3>
+                              <div className="parchment-text-light text-sm">{session.date}</div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                              <button
+                                onClick={() => toggleSessionCollapse(session.id)}
+                                className="text-sm parchment-text-light hover:parchment-text"
+                                title={collapsedSessions[session.id] ? 'Expand' : 'Collapse'}
+                              >
+                                {collapsedSessions[session.id] ? 'Expand' : 'Collapse'}
+                              </button>
+                              <button
+                                onClick={() => setEditingItem({ type: 'session', id: session.id })}
+                                className="text-artificerBlue hover:text-artificerBlue/80 text-sm"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteItem('session', session.id)}
+                                className="text-red-400 hover:text-red-300 text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                          {!collapsedSessions[session.id] && (
+                            <p className="parchment-text-light text-sm" style={{ whiteSpace: 'pre-wrap' }}>{session.notes}</p>
+                          )}
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -226,6 +335,43 @@ const EnhancedNotes = () => {
                       onChange={(e) => setNewCharacter({...newCharacter, role: e.target.value})}
                       className="parchment-card rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
                       placeholder="Role (NPC, Ally, Enemy, etc.)"
+                    />
+                    <input
+                      type="text"
+                      value={newCharacter.race}
+                      onChange={(e) => setNewCharacter({ ...newCharacter, race: e.target.value })}
+                      className="parchment-card rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                      placeholder="Race (e.g., Tortle, Human, Elf)"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        value={newCharacter.height}
+                        onChange={(e) => setNewCharacter({ ...newCharacter, height: e.target.value })}
+                        className="parchment-card rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                        placeholder="Height (e.g., 5 ft 8 in)"
+                      />
+                      <input
+                        type="text"
+                        value={newCharacter.weight}
+                        onChange={(e) => setNewCharacter({ ...newCharacter, weight: e.target.value })}
+                        className="parchment-card rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                        placeholder="Weight (e.g., 160 lb)"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={newCharacter.gender}
+                      onChange={(e) => setNewCharacter({ ...newCharacter, gender: e.target.value })}
+                      className="parchment-card rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                      placeholder="Gender"
+                    />
+                    <input
+                      type="text"
+                      value={newCharacter.characterClass}
+                      onChange={(e) => setNewCharacter({ ...newCharacter, characterClass: e.target.value })}
+                      className="parchment-card rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                      placeholder="Class"
                     />
                     <select
                       value={newCharacter.status}
@@ -261,6 +407,10 @@ const EnhancedNotes = () => {
                 </div>
 
                 {/* Characters List */}
+                <div className="flex items-center justify-end gap-2 mb-2 flex-wrap">
+                  <button onClick={collapseAllCharacters} className="text-xs px-2 py-1 parchment-card hover:shadow">Collapse All</button>
+                  <button onClick={expandAllCharacters} className="text-xs px-2 py-1 parchment-card hover:shadow">Expand All</button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {characters.map(character => (
                     <div key={character.id} className="parchment-card p-4 rounded-lg border border-artificerBronze/20">
@@ -279,6 +429,45 @@ const EnhancedNotes = () => {
                             onChange={(e) => updateItemData('character', character.id, { role: e.target.value })}
                             className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
                           />
+                          <input
+                            type="text"
+                            value={character.race || ''}
+                            onChange={(e) => updateItemData('character', character.id, { race: e.target.value })}
+                            className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
+                            placeholder="Race (e.g., Tortle, Human, Elf)"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={character.height || ''}
+                              onChange={(e) => updateItemData('character', character.id, { height: e.target.value })}
+                              className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
+                              placeholder="Height (e.g., 5 ft 8 in)"
+                            />
+                            <input
+                              type="text"
+                              value={character.weight || ''}
+                              onChange={(e) => updateItemData('character', character.id, { weight: e.target.value })}
+                              className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
+                              placeholder="Weight (e.g., 160 lb)"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={character.gender || ''}
+                              onChange={(e) => updateItemData('character', character.id, { gender: e.target.value })}
+                              className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
+                              placeholder="Gender"
+                            />
+                            <input
+                              type="text"
+                              value={character.characterClass || ''}
+                              onChange={(e) => updateItemData('character', character.id, { characterClass: e.target.value })}
+                              className="w-full parchment-card rounded p-2 parchment-text border border-artificerBronze/30"
+                              placeholder="Class"
+                            />
+                          </div>
                           <select
                             value={character.status}
                             onChange={(e) => updateItemData('character', character.id, { status: e.target.value })}
@@ -316,10 +505,17 @@ const EnhancedNotes = () => {
                               <h3 className="parchment-text font-semibold">{character.name}</h3>
                               <div className="parchment-text-light text-sm">{character.role}</div>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
                               <span className={`text-sm ${getStatusColor(character.status)}`}>
                                 {character.status}
                               </span>
+                              <button
+                                onClick={() => toggleCharacterCollapse(character.id)}
+                                className="text-sm parchment-text-light hover:parchment-text"
+                                title={collapsedCharacters[character.id] ? 'Expand' : 'Collapse'}
+                              >
+                                {collapsedCharacters[character.id] ? 'Expand' : 'Collapse'}
+                              </button>
                               <button
                                 onClick={() => setEditingItem({ type: 'character', id: character.id })}
                                 className="text-artificerBlue hover:text-artificerBlue/80 text-sm"
@@ -334,9 +530,20 @@ const EnhancedNotes = () => {
                               </button>
                             </div>
                           </div>
-                          <p className="parchment-text-light text-sm mb-2">{character.description}</p>
-                          {character.notes && (
-                            <p className="parchment-text-light text-xs italic">{character.notes}</p>
+                          {!collapsedCharacters[character.id] && (
+                            <>
+                              <div className="parchment-text-light text-xs flex flex-wrap gap-2 mt-1">
+                                {character.race && (<span className="px-2 py-0.5 rounded bg-amber-900/20">Race: {character.race}</span>)}
+                                {character.height && (<span className="px-2 py-0.5 rounded bg-amber-900/20">Height: {character.height}</span>)}
+                                {character.weight && (<span className="px-2 py-0.5 rounded bg-amber-900/20">Weight: {character.weight}</span>)}
+                                {character.gender && (<span className="px-2 py-0.5 rounded bg-amber-900/20">Gender: {character.gender}</span>)}
+                                {character.characterClass && (<span className="px-2 py-0.5 rounded bg-amber-900/20">Class: {character.characterClass}</span>)}
+                              </div>
+                              <p className="parchment-text-light text-sm mb-2" style={{ whiteSpace: 'pre-wrap' }}>{character.description}</p>
+                              {character.notes && (
+                                <p className="parchment-text-light text-xs italic" style={{ whiteSpace: 'pre-wrap' }}>{character.notes}</p>
+                              )}
+                            </>
                           )}
                         </>
                       )}
@@ -397,6 +604,10 @@ const EnhancedNotes = () => {
                 </div>
 
                 {/* Locations List */}
+                <div className="flex items-center justify-end gap-2 mb-2 flex-wrap">
+                  <button onClick={collapseAllLocations} className="text-xs px-2 py-1 parchment-card hover:shadow">Collapse All</button>
+                  <button onClick={expandAllLocations} className="text-xs px-2 py-1 parchment-card hover:shadow">Expand All</button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {locations.map(location => (
                     <div key={location.id} className="parchment-card p-4 rounded-lg border border-artificerBronze/20">
@@ -451,7 +662,14 @@ const EnhancedNotes = () => {
                                 <div className="parchment-text-light text-sm capitalize">{location.type}</div>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                              <button
+                                onClick={() => toggleLocationCollapse(location.id)}
+                                className="text-sm parchment-text-light hover:parchment-text"
+                                title={collapsedLocations[location.id] ? 'Expand' : 'Collapse'}
+                              >
+                                {collapsedLocations[location.id] ? 'Expand' : 'Collapse'}
+                              </button>
                               <button
                                 onClick={() => setEditingItem({ type: 'location', id: location.id })}
                                 className="text-artificerBlue hover:text-artificerBlue/80 text-sm"
@@ -466,9 +684,13 @@ const EnhancedNotes = () => {
                               </button>
                             </div>
                           </div>
-                          <p className="parchment-text-light text-sm mb-2">{location.description}</p>
-                          {location.notes && (
-                            <p className="parchment-text-light text-xs italic">{location.notes}</p>
+                          {!collapsedLocations[location.id] && (
+                            <>
+                              <p className="parchment-text-light text-sm mb-2" style={{ whiteSpace: 'pre-wrap' }}>{location.description}</p>
+                              {location.notes && (
+                                <p className="parchment-text-light text-xs italic" style={{ whiteSpace: 'pre-wrap' }}>{location.notes}</p>
+                              )}
+                            </>
                           )}
                         </>
                       )}

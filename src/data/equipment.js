@@ -3,7 +3,8 @@ export const EQUIPMENT_TYPES = {
   ARMOR: 'armor',
   TOOL: 'tool',
   GEAR: 'gear',
-  CONTAINER: 'container'
+  CONTAINER: 'container',
+  FOOD: 'food'
 };
 
 export const DEFAULT_EQUIPMENT = {
@@ -25,5 +26,11 @@ export const DEFAULT_EQUIPMENT = {
     weight: 6,
     quantity: 1,
     ac: 2
+  },
+  "Rations (1 day)": {
+    type: EQUIPMENT_TYPES.FOOD,
+    description: "Dry rations sufficient to feed one creature for a day.",
+    weight: 2,
+    quantity: 5
   }
 };
