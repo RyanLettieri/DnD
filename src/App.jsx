@@ -84,6 +84,20 @@ export default function App() {
   const [characters, setCharacters] = usePersistentState('characters', {});
   const [activeCharacterId, setActiveCharacterId] = usePersistentState('activeCharacterId', null);
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'character'
+
+  // Listen for character data updates from CharacterSheet
+  useEffect(() => {
+    const handleCharacterDataUpdated = (e) => {
+      const { characters: updatedCharacters } = e.detail;
+      setCharacters(updatedCharacters);
+    };
+
+    window.addEventListener('characterDataUpdated', handleCharacterDataUpdated);
+
+    return () => {
+      window.removeEventListener('characterDataUpdated', handleCharacterDataUpdated);
+    };
+  }, [setCharacters]);
   
   // Debug function to clear and re-migrate
   const clearAndRemigrate = () => {
@@ -109,13 +123,6 @@ export default function App() {
       const oldProficiencies = localStorage.getItem('proficiencies');
       const oldSavingThrows = localStorage.getItem('savingThrows');
       
-      console.log('Migration check:', {
-        oldStats: oldStats ? 'found' : 'not found',
-        oldProficiencies: oldProficiencies ? 'found' : 'not found',
-        oldSavingThrows: oldSavingThrows ? 'found' : 'not found',
-        charactersCount: Object.keys(characters).length
-      });
-      
       if (oldStats && Object.keys(characters).length === 0) {
         console.log('Migrating old character data to multi-character format...');
         
@@ -124,8 +131,6 @@ export default function App() {
           const stats = JSON.parse(oldStats);
           const proficiencies = oldProficiencies ? JSON.parse(oldProficiencies) : DEFAULT_PROFICIENCIES;
           const savingThrows = oldSavingThrows ? JSON.parse(oldSavingThrows) : DEFAULT_SAVING_THROWS;
-          
-          console.log('Parsed old data:', { stats, proficiencies, savingThrows });
           
           const characterName = stats.characterName || 'Migrated Character';
           const characterId = `character_${Date.now()}`;
@@ -136,7 +141,7 @@ export default function App() {
             name: characterName,
             class: stats.class || 'Artificer',
             level: stats.level || 1,
-            race: stats.race || '',
+            race: stats.race || 'Tortle', // Default to Tortle for Inituga
             portrait: '/tortle-portrait.png',
             createdAt: new Date().toISOString(),
             lastModified: new Date().toISOString(),
@@ -146,6 +151,8 @@ export default function App() {
             conditions: [],
             equipment: DEFAULT_EQUIPMENT,
             preparedSpells: {},
+            toolProficiencies: ["Chef's Tools", "Tinker's Tools", "Light Armor", "Medium Armor", "Shields", "Simple Weapons"],
+            languages: ["Common", "Aquan"],
             backgroundScribe: {
               traits: '',
               ideals: '',
@@ -156,14 +163,43 @@ export default function App() {
             }
           };
           
+          // Migrate all existing character-specific data from global keys
+          const migrateGlobalData = (globalKey, characterKey) => {
+            const data = localStorage.getItem(globalKey);
+            if (data) {
+              localStorage.setItem(`character_${characterId}_${characterKey}`, data);
+              console.log(`Migrated ${globalKey} to character_${characterId}_${characterKey}`);
+            }
+          };
+          
+          // Migrate all the global data to character-specific keys
+          migrateGlobalData('backgroundScribe', 'backgroundScribe');
+          migrateGlobalData('deathSaves', 'deathSaves');
+          migrateGlobalData('campaignSessions', 'campaignSessions');
+          migrateGlobalData('campaignCharacters', 'campaignCharacters');
+          migrateGlobalData('campaignLocations', 'campaignLocations');
+          migrateGlobalData('quickNotes', 'quickNotes');
+          migrateGlobalData('characterBackground', 'characterBackground');
+          migrateGlobalData('collapsedSessions', 'collapsedSessions');
+          migrateGlobalData('collapsedCharacters', 'collapsedCharacters');
+          migrateGlobalData('collapsedLocations', 'collapsedLocations');
+          migrateGlobalData('eldritchCannonAvailable', 'eldritchCannonAvailable');
+          
+          // Also migrate prepared spells if they exist
+          const oldPreparedSpells = localStorage.getItem('preparedSpells');
+          if (oldPreparedSpells) {
+            try {
+              const prepared = JSON.parse(oldPreparedSpells);
+              migratedCharacter.preparedSpells = prepared;
+              console.log('Migrated prepared spells:', prepared);
+            } catch (e) {
+              console.error('Failed to migrate prepared spells:', e);
+            }
+          }
+          
           // Add the migrated character
           setCharacters({ [characterId]: migratedCharacter });
           setActiveCharacterId(characterId);
-          
-          // Clear old data (optional - keep for safety)
-          // localStorage.removeItem('stats');
-          // localStorage.removeItem('proficiencies');
-          // localStorage.removeItem('savingThrows');
           
           console.log('Migration completed successfully!');
           
@@ -178,29 +214,141 @@ export default function App() {
 
   const createCharacter = (characterData) => {
     const characterId = `character_${Date.now()}`;
+    
+    // Class-specific defaults
+    const getClassDefaults = (characterClass) => {
+      switch (characterClass) {
+        case 'Barbarian':
+          return {
+            ...DEFAULT_STATS,
+            characterName: characterData.name,
+            level: characterData.level,
+            class: 'Barbarian',
+            // All stats default to 10 as requested
+            strength: 10,
+            constitution: 10,
+            dexterity: 10,
+            intelligence: 10,
+            wisdom: 10,
+            charisma: 10,
+            // Barbarians use d12 hit dice
+            hitDiceSize: 12,
+            // Unarmored Defense: AC = 10 + DEX + CON (will be calculated dynamically)
+            armorClass: 10,
+            proficiencyBonus: 2,
+            HP: 12 + 0, // d12 + CON mod (10 CON = +0)
+            MaxHP: 12 + 0,
+            // Rage damage
+            rageDamage: 2,
+            ragesPerDay: Math.max(1, Math.floor(characterData.level / 2) + 2)
+          };
+        case 'Artificer':
+        default:
+          return {
+            ...DEFAULT_STATS,
+            characterName: characterData.name,
+            level: characterData.level,
+            class: characterClass
+          };
+      }
+    };
+    
+    const getClassSavingThrows = (characterClass) => {
+      switch (characterClass) {
+        case 'Barbarian':
+          return {
+            strength: true,
+            dexterity: false,
+            constitution: true,
+            intelligence: false,
+            wisdom: false,
+            charisma: false
+          };
+        case 'Artificer':
+        default:
+          return DEFAULT_SAVING_THROWS;
+      }
+    };
+    
+    const getClassProficiencies = (characterClass) => {
+      switch (characterClass) {
+        case 'Barbarian':
+          return {
+            ...DEFAULT_PROFICIENCIES,
+            "Athletics": true, // Barbarians are proficient in Athletics
+            "Survival": true  // And Survival
+          };
+        default:
+          return DEFAULT_PROFICIENCIES;
+      }
+    };
+    
+    const getClassEquipment = (characterClass) => {
+      switch (characterClass) {
+        case 'Barbarian':
+          return [
+            { name: "Greataxe", quantity: 1, description: "Two-handed melee weapon" },
+            { name: "Handaxe", quantity: 2, description: "One-handed melee weapon" },
+            { name: "Explorer's Pack", quantity: 1, description: "Contains various adventuring gear" },
+            { name: "Javelin", quantity: 4, description: "Thrown weapon" }
+          ];
+        default:
+          return DEFAULT_EQUIPMENT;
+      }
+    };
+
+    const getClassToolProficiencies = (characterClass) => {
+      switch (characterClass) {
+        case 'Barbarian':
+          return []; // Barbarians don't get tool proficiencies by default
+        case 'Artificer':
+          return ["Tinker's Tools"];
+        default:
+          return [];
+      }
+    };
+
+    const getClassLanguages = (characterClass) => {
+      switch (characterClass) {
+        case 'Barbarian':
+          return ["Common"]; // Only Common by default
+        case 'Artificer':
+          return ["Common"]; // Only Common by default
+        default:
+          return ["Common"];
+      }
+    };
+    
+    const classDefaults = getClassDefaults(characterData.class);
+    
     const newCharacter = {
       id: characterId,
       name: characterData.name,
       class: characterData.class,
       level: characterData.level,
       race: characterData.race,
-      portrait: null, // Blank for now
+      portrait: null, // Blank for new characters
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
-      stats: { ...DEFAULT_STATS, characterName: characterData.name, level: characterData.level },
-      proficiencies: DEFAULT_PROFICIENCIES,
-      savingThrows: DEFAULT_SAVING_THROWS,
+      stats: classDefaults,
+      proficiencies: getClassProficiencies(characterData.class),
+      savingThrows: getClassSavingThrows(characterData.class),
       conditions: [],
-      equipment: DEFAULT_EQUIPMENT,
-      preparedSpells: {},
-      backgroundScribe: {
-        traits: '',
-        ideals: '',
-        bonds: '',
-        flaws: '',
-        originNotes: '',
-        bonusLanguages: ['', '']
-      }
+      equipment: getClassEquipment(characterData.class),
+      preparedSpells: {}, // Barbarians don't have spells
+      toolProficiencies: getClassToolProficiencies(characterData.class),
+      languages: getClassLanguages(characterData.class),
+      // Only add backgroundScribe for Artificers
+      ...(characterData.class === 'Artificer' && {
+        backgroundScribe: {
+          traits: '',
+          ideals: '',
+          bonds: '',
+          flaws: '',
+          originNotes: '',
+          bonusLanguages: ['', '']
+        }
+      })
     };
 
     setCharacters(prev => ({ ...prev, [characterId]: newCharacter }));

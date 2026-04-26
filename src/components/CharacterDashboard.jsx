@@ -10,18 +10,6 @@ const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, 
     onCreateCharacter(characterData);
   };
 
-  const handleDebugRemigrate = () => {
-    if (window.confirm('Debug: Clear all character data and re-migrate from old format? Continue?')) {
-      // Clear all character-related localStorage
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('character_') || key === 'characters' || key === 'activeCharacterId') {
-          localStorage.removeItem(key);
-        }
-      });
-      window.location.reload();
-    }
-  };
-
   const handleDeleteCharacter = (character) => {
     // Basic safeguard - will enhance this later
     const confirmDelete = window.confirm(
@@ -53,15 +41,9 @@ const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, 
       <div className="text-center mb-8">
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-6 py-3 bg-artificerBronze hover:bg-artificerBronze/90 text-white rounded-lg font-semibold text-lg transition-all button-glow mr-4"
+          className="px-6 py-3 bg-artificerBronze hover:bg-artificerBronze/90 text-white rounded-lg font-semibold text-lg transition-all button-glow"
         >
           + Create New Character
-        </button>
-        <button
-          onClick={handleDebugRemigrate}
-          className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-all"
-        >
-          🔄 Debug Re-migrate
         </button>
       </div>
 

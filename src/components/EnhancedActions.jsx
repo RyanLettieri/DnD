@@ -64,6 +64,12 @@ const ACTIONS = {
       description: "Cast a spell with a casting time of 1 bonus action.",
       type: "bonus_action",
       icon: "✨"
+    },
+    "Rage": {
+      description: "On your turn, you can enter a rage as a bonus action. While raging, you gain resistance to bludgeoning, piercing, and slashing damage, and you have advantage on Strength checks and Strength saving throws.",
+      type: "bonus_action",
+      icon: "💢",
+      classSpecific: "Barbarian"
     }
   },
   "Reactions": {
@@ -106,9 +112,11 @@ const ACTIONS = {
   }
 };
 
-const EnhancedActions = () => {
+const EnhancedActions = ({ character, stats }) => {
   const [selectedCategory, setSelectedCategory] = useState("Standard Actions");
   const [showDetails, setShowDetails] = useState(null);
+  
+  const characterClass = character?.class || stats?.class || 'Artificer';
 
   const getActionIcon = (type) => {
     switch (type) {
@@ -164,7 +172,21 @@ const EnhancedActions = () => {
 
           {/* Actions List */}
           <div className="space-y-3">
-            {Object.entries(ACTIONS[selectedCategory]).map(([actionName, action]) => (
+            {Object.entries(ACTIONS[selectedCategory])
+              .filter(([actionName, action]) => {
+                // If action has classSpecific, only show if it matches the current class
+                if (action.classSpecific) {
+                  return action.classSpecific.includes(characterClass);
+                }
+                // If action has racialSpecific, only show if it matches the character race
+                if (action.racialSpecific) {
+                  const characterRace = character?.race || stats?.race || '';
+                  return action.racialSpecific.includes(characterRace);
+                }
+                // Otherwise, show the action
+                return true;
+              })
+              .map(([actionName, action]) => (
               <div
                 key={actionName}
                 className="parchment-card p-4 rounded-lg border border-artificerBronze/20 hover:shadow-lg transition-all duration-200 cursor-pointer"

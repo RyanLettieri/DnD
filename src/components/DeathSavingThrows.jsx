@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import Card from './Card';
 import usePersistentState from '../hooks/usePersistentState';
 
-const DeathSavingThrows = () => {
-  const [deathSaves, setDeathSaves] = usePersistentState('deathSaves', {
+const DeathSavingThrows = ({ characterDataPrefix }) => {
+  const [deathSaves, setDeathSaves] = usePersistentState(`${characterDataPrefix}_deathSaves`, {
     successes: 0,
     failures: 0
   });

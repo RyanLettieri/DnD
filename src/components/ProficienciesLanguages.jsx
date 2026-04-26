@@ -1,20 +1,11 @@
 import React from 'react';
 import Card from './Card';
+import usePersistentState from '../hooks/usePersistentState';
 
-const ProficienciesLanguages = () => {
-  const proficiencies = [
-    "Chef's Tools",
-    "Tinker's Tools",
-    "Light Armor",
-    "Medium Armor",
-    "Shields",
-    "Simple Weapons"
-  ];
-
-  const languages = [
-    "Common",
-    "Aquan"
-  ];
+const ProficienciesLanguages = ({ characterDataPrefix }) => {
+  // Character-specific proficiencies and languages
+  const [proficiencies, setProficiencies] = usePersistentState(`${characterDataPrefix}_toolProficiencies`, []);
+  const [languages, setLanguages] = usePersistentState(`${characterDataPrefix}_languages`, []);
 
   return (
     <Card>

@@ -6,8 +6,8 @@ import usePersistentState from '../hooks/usePersistentState';
 // - Shows fixed background info (skills, tools, languages, equipment, feature)
 // - Lets the player record Traits/Ideals/Bonds/Flaws and Origin Notes
 // - Persists locally via usePersistentState
-const BackgroundScribe = () => {
-  const [bg, setBg] = usePersistentState('backgroundScribe', {
+const BackgroundScribe = ({ characterDataPrefix, character }) => {
+  const [bg, setBg] = usePersistentState(`${characterDataPrefix}_backgroundScribe`, character?.backgroundScribe || {
     traits: '',
     ideals: '',
     bonds: '',

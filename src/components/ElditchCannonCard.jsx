@@ -21,9 +21,9 @@ const CANNON_DETAILS = {
   }
 };
 
-const ElditchCannonCard = ({ spellSlots, onUpdateSpellSlots }) => {
+const ElditchCannonCard = ({ spellSlots, onUpdateSpellSlots, characterDataPrefix }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [canCreateCannon, setCanCreateCannon] = usePersistentState('eldritchCannonAvailable', true);
+  const [canCreateCannon, setCanCreateCannon] = usePersistentState(`${characterDataPrefix}_eldritchCannonAvailable`, true);
 
   const spendFirstAvailableSpellSlot = () => {
     if (!spellSlots || !onUpdateSpellSlots) return false;

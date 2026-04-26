@@ -2,32 +2,26 @@ import React, { useState } from 'react';
 import Card from './Card';
 import usePersistentState from '../hooks/usePersistentState';
 
-const EnhancedNotes = () => {
+const EnhancedNotes = ({ characterDataPrefix }) => {
   const [activeTab, setActiveTab] = useState('sessions');
-  const [sessions, setSessions] = usePersistentState('campaignSessions', []);
-  const [characters, setCharacters] = usePersistentState('campaignCharacters', []);
-  const [locations, setLocations] = usePersistentState('campaignLocations', []);
-  const [quickNotes, setQuickNotes] = usePersistentState('quickNotes', '');
-  const [background, setBackground] = usePersistentState('characterBackground', '');
+  const [sessions, setSessions] = usePersistentState(`${characterDataPrefix}_campaignSessions`, []);
+  const [characters, setCharacters] = usePersistentState(`${characterDataPrefix}_campaignCharacters`, []);
+  const [locations, setLocations] = usePersistentState(`${characterDataPrefix}_campaignLocations`, []);
+  const [quickNotes, setQuickNotes] = usePersistentState(`${characterDataPrefix}_quickNotes`, '');
+  const [background, setBackground] = usePersistentState(`${characterDataPrefix}_characterBackground`, '');
   
   const [newSession, setNewSession] = useState({ title: '', date: '', notes: '' });
   const [newCharacter, setNewCharacter] = useState({
     name: '',
     role: '',
-    race: '',
-    height: '',
-    weight: '',
-    gender: '',
-    characterClass: '',
     description: '',
-    notes: '',
-    status: 'alive'
+    notes: ''
   });
   const [newLocation, setNewLocation] = useState({ name: '', type: '', description: '', notes: '' });
   const [editingItem, setEditingItem] = useState(null);
-  const [collapsedSessions, setCollapsedSessions] = usePersistentState('collapsedSessions', {});
-  const [collapsedCharacters, setCollapsedCharacters] = usePersistentState('collapsedCharacters', {});
-  const [collapsedLocations, setCollapsedLocations] = usePersistentState('collapsedLocations', {});
+  const [collapsedSessions, setCollapsedSessions] = usePersistentState(`${characterDataPrefix}_collapsedSessions`, {});
+  const [collapsedCharacters, setCollapsedCharacters] = usePersistentState(`${characterDataPrefix}_collapsedCharacters`, {});
+  const [collapsedLocations, setCollapsedLocations] = usePersistentState(`${characterDataPrefix}_collapsedLocations`, {});
 
   const addSession = () => {
     if (newSession.title.trim()) {
