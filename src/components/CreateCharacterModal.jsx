@@ -14,6 +14,14 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate }) => {
       alert('Please enter a character name');
       return;
     }
+    
+    // Check if selected class is implemented
+    const implementedClasses = ['Artificer', 'Barbarian'];
+    if (!implementedClasses.includes(characterData.class)) {
+      alert(`Sorry, ${characterData.class} is not yet implemented. Please select Artificer or Barbarian for now. More classes coming soon!`);
+      return;
+    }
+    
     onCreate(characterData);
     setCharacterData({ name: '', class: 'Artificer', level: 1, race: '' });
     onClose();
@@ -58,20 +66,26 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate }) => {
               onChange={(e) => handleInputChange('class', e.target.value)}
               className="w-full p-3 rounded parchment-card border-2 border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none parchment-text"
             >
-              <option value="Artificer">Artificer</option>
-              <option value="Barbarian">Barbarian</option>
-              <option value="Bard">Bard</option>
-              <option value="Cleric">Cleric</option>
-              <option value="Druid">Druid</option>
-              <option value="Fighter">Fighter</option>
-              <option value="Monk">Monk</option>
-              <option value="Paladin">Paladin</option>
-              <option value="Ranger">Ranger</option>
-              <option value="Rogue">Rogue</option>
-              <option value="Sorcerer">Sorcerer</option>
-              <option value="Warlock">Warlock</option>
-              <option value="Wizard">Wizard</option>
+              <option value="Artificer">✅ Artificer</option>
+              <option value="Barbarian">✅ Barbarian</option>
+              <option value="Bard">🚧 Bard (Coming Soon)</option>
+              <option value="Cleric">🚧 Cleric (Coming Soon)</option>
+              <option value="Druid">🚧 Druid (Coming Soon)</option>
+              <option value="Fighter">🚧 Fighter (Coming Soon)</option>
+              <option value="Monk">🚧 Monk (Coming Soon)</option>
+              <option value="Paladin">🚧 Paladin (Coming Soon)</option>
+              <option value="Ranger">🚧 Ranger (Coming Soon)</option>
+              <option value="Rogue">🚧 Rogue (Coming Soon)</option>
+              <option value="Sorcerer">🚧 Sorcerer (Coming Soon)</option>
+              <option value="Warlock">🚧 Warlock (Coming Soon)</option>
+              <option value="Wizard">🚧 Wizard (Coming Soon)</option>
             </select>
+            <div className="mt-2 text-xs parchment-text-light">
+              <div className="flex items-center space-x-4">
+                <span>✅ Available Now</span>
+                <span>🚧 Coming Soon</span>
+              </div>
+            </div>
           </div>
 
           {/* Level */}
