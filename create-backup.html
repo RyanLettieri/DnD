@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Character Data Backup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5dc;
+            color: #3C2415;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #8B4513;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #654321;
+        }
+        .backup-output {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ D&D Character Data Backup</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This tool will help you backup your current character data before we upgrade to multi-character support. 
+            Please run this backup before proceeding with the update!
+        </div>
+
+        <h2>Step 1: Create Backup</h2>
+        <p>Click the button below to extract all your current character data from localStorage:</p>
+        <button onclick="createBackup()">📋 Create Character Backup</button>
+        
+        <h2>Step 2: Save Your Backup</h2>
+        <p>The backup data will appear below. Copy it and save it to a text file for safekeeping:</p>
+        
+        <div id="backup-output" class="backup-output" style="display: none;"></div>
+        
+        <button onclick="copyBackup()" id="copy-btn" style="display: none;">📑 Copy to Clipboard</button>
+        <button onclick="downloadBackup()" id="download-btn" style="display: none;">💾 Download Backup File</button>
+        
+        <h2>Step 3: Verify Backup</h2>
+        <p>Make sure you have saved your backup data before proceeding with the multi-character update!</p>
+        
+        <h2>Restore Instructions (if needed)</h2>
+        <details>
+            <summary>How to restore your data</summary>
+            <p>If something goes wrong during the update, you can restore your data by:</p>
+            <ol>
+                <li>Open your D&D character sheet</li>
+                <li>Open browser developer tools (F12)</li>
+                <li>Go to Console tab</li>
+                <li>Paste your backup data as a variable and run:</li>
+                <code>
+                    const backupData = { /* your backup data here */ };<br>
+                    Object.keys(backupData).forEach(key => {<br>
+                    &nbsp;&nbsp;localStorage.setItem(key, JSON.stringify(backupData[key]));<br>
+                    });<br>
+                    location.reload();
+                </code>
+            </ol>
+        </details>
+    </div>
+
+    <script>
+        let backupData = {};
+        
+        function createBackup() {
+            // Get all character-related localStorage keys
+            const keys = [
+                'stats',
+                'proficiencies', 
+                'savingThrows',
+                'conditions',
+                'equipment',
+                'preparedSpells',
+                'deathSaves',
+                'backgroundScribe'
+            ];
+            
+            backupData = {
+                timestamp: new Date().toISOString(),
+                data: {}
+            };
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    try {
+                        backupData.data[key] = JSON.parse(value);
+                    } catch (e) {
+                        backupData.data[key] = value;
+                    }
+                }
+            });
+            
+            // Display the backup
+            const output = document.getElementById('backup-output');
+            output.textContent = JSON.stringify(backupData, null, 2);
+            output.style.display = 'block';
+            
+            // Show action buttons
+            document.getElementById('copy-btn').style.display = 'inline-block';
+            document.getElementById('download-btn').style.display = 'inline-block';
+            
+            console.log('Character backup created:', backupData);
+        }
+        
+        function copyBackup() {
+            const backupText = JSON.stringify(backupData, null, 2);
+            navigator.clipboard.writeText(backupText).then(() => {
+                alert('Backup copied to clipboard! Save it to a text file.');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard. Please copy manually.');
+            });
+        }
+        
+        function downloadBackup() {
+            const backupText = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([backupText], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dd-character-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Check if we're on the character sheet page
+        if (window.location.pathname.includes('src') || window.location.hostname === 'localhost') {
+            console.log('Backup tool ready. Make sure you run this on your character sheet page to extract data.');
+        }
+    </script>
+</body>
+</html>

@@ -1,49 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import usePersistentState from './hooks/usePersistentState';
+import CharacterDashboard from './components/CharacterDashboard';
+import CharacterSheet from './components/CharacterSheet';
 import './styles/enhancements.css';
-import HPBar from './components/HPBar';
-import HitDice from './components/HitDice';
-import BackgroundScribe from './components/BackgroundScribe';
-import Card from './components/Card';
-import ActionCard from './components/ActionCard';
-import SpellCard from './components/SpellCard';
-import ElditchCannonCard from './components/ElditchCannonCard';
-import CurrencyManager from './components/CurrencyManager';
-import SavingThrows from './components/SavingThrows';
-import ConditionsTracker from './components/ConditionsTracker';
-import ProficienciesLanguages from './components/ProficienciesLanguages';
-import Equipment from './components/Equipment';
-import QuickActions from './components/QuickActions';
-import SpellSlotTracker from './components/SpellSlotTracker';
-import FeaturesTracker from './components/FeaturesTracker';
-import SpellPreparation from './components/SpellPreparation';
-import InfusionsTracker from './components/InfusionsTracker';
-import EnhancedActions from './components/EnhancedActions';
-import EnhancedNotes from './components/EnhancedNotes';
-import DeathSavingThrows from './components/DeathSavingThrows';
-import { SPELL_DETAILS } from './data/spells';
-import { DEFAULT_EQUIPMENT } from './data/equipment';
-
-const allSkills = [
-  "Acrobatics",
-  "Animal Handling",
-  "Arcana",
-  "Athletics",
-  "Deception",
-  "History",
-  "Insight",
-  "Intimidation",
-  "Investigation",
-  "Medicine",
-  "Nature",
-  "Perception",
-  "Performance",
-  "Persuasion",
-  "Religion",
-  "Sleight of Hand",
-  "Stealth",
-  "Survival",
-];
 
 const DEFAULT_STATS = {
   // Base Stats - ensure these are numbers
@@ -56,6 +15,8 @@ const DEFAULT_STATS = {
   // Character Info
   characterName: '',
   level: 1,
+  class: 'Artificer',
+  race: '',
   // Combat Stats
   proficiencyBonus: 2,
   armorClass: 17, // Tortle Natural Armor
@@ -83,841 +44,249 @@ const DEFAULT_STATS = {
   }
 };
 
-
-const SKILL_ABILITIES = {
-  "Acrobatics": "dexterity",
-  "Animal Handling": "wisdom",
-  "Arcana": "intelligence",
-  "Athletics": "strength",
-  "Deception": "charisma",
-  "History": "intelligence",
-  "Insight": "wisdom",
-  "Intimidation": "charisma",
-  "Investigation": "intelligence",
-  "Medicine": "wisdom",
-  "Nature": "intelligence",
-  "Perception": "wisdom",
-  "Performance": "charisma",
-  "Persuasion": "charisma",
-  "Religion": "intelligence",
-  "Sleight of Hand": "dexterity",
-  "Stealth": "dexterity",
-  "Survival": "wisdom"
+const DEFAULT_PROFICIENCIES = {
+  "Acrobatics": false,
+  "Animal Handling": false,
+  "Arcana": false,
+  "Athletics": false,
+  "Deception": false,
+  "History": false,
+  "Insight": false,
+  "Intimidation": false,
+  "Investigation": false,
+  "Medicine": false,
+  "Nature": false,
+  "Perception": false,
+  "Performance": false,
+  "Persuasion": false,
+  "Religion": false,
+  "Sleight of Hand": false,
+  "Stealth": false,
+  "Survival": false,
 };
 
+const DEFAULT_SAVING_THROWS = {
+  strength: false,
+  dexterity: false,
+  constitution: true,
+  intelligence: true,
+  wisdom: false,
+  charisma: false
+};
+
+const DEFAULT_EQUIPMENT = [
+  { name: "Dagger", quantity: 1, description: "Simple melee weapon" },
+  { name: "Leather Armor", quantity: 1, description: "Light armor" },
+  { name: "Explorer's Pack", quantity: 1, description: "Contains various adventuring gear" }
+];
+
 export default function App() {
-  const [stats, setStats] = usePersistentState("stats", DEFAULT_STATS);
-  const [proficiencies, setProficiencies] = usePersistentState("proficiencies", {
-    // Initialize all skills as not proficient
-    "Acrobatics": false,
-    "Animal Handling": false,
-    "Arcana": false,
-    "Athletics": false,
-    "Deception": false,
-    "History": false,
-    "Insight": false,
-    "Intimidation": false,
-    "Investigation": false,
-    "Medicine": false,
-    "Nature": false,
-    "Perception": false,
-    "Performance": false,
-    "Persuasion": false,
-    "Religion": false,
-    "Sleight of Hand": false,
-    "Stealth": false,
-    "Survival": false,
-  });
-  const [savingThrowProficiencies, setSavingThrowProficiencies] = usePersistentState('savingThrows', {
-    strength: false,
-    dexterity: false,
-    constitution: true,
-    intelligence: true,
-    wisdom: false,
-    charisma: false
-  });
-  const [activeConditions, setActiveConditions] = usePersistentState('conditions', []);
-  const [equipment, setEquipment] = usePersistentState('equipment', DEFAULT_EQUIPMENT);
-  const [preparedSpells, setPreparedSpells] = usePersistentState('preparedSpells', {});
+  const [characters, setCharacters] = usePersistentState('characters', {});
+  const [activeCharacterId, setActiveCharacterId] = usePersistentState('activeCharacterId', null);
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'character'
   
-  // Ensure spellSlots are properly initialized
-  React.useEffect(() => {
-    if (!stats.spellSlots) {
-      setStats(prev => ({
-        ...prev,
-        spellSlots: DEFAULT_STATS.spellSlots
-      }));
-    }
-  }, [stats.spellSlots]);
-
-  const [hpModalOpen, setHpModalOpen] = useState(false);
-  const [hpAmount, setHpAmount] = useState(0);
-  const [hpAction, setHpAction] = useState("damage");
-  const [maxHpModalOpen, setMaxHpModalOpen] = useState(false);
-  const [newMaxHp, setNewMaxHp] = useState(0);
-  const [activeTab, setActiveTab] = useState('main');
-
-  const tabs = [
-    { id: 'main', label: 'Character' },
-    { id: 'background', label: 'Background' },
-    { id: 'combat', label: 'Combat' },
-    { id: 'actions', label: 'Actions' },
-    { id: 'spells', label: 'Spells' },
-    { id: 'infusions', label: 'Infusions' },
-    { id: 'skills', label: 'Skills' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'features', label: 'Features' },
-    { id: 'notes', label: 'Notes' }
-  ];
-
-  const toggleProficiency = (skill) =>
-    setProficiencies({ ...proficiencies, [skill]: !proficiencies[skill] });
-
-  const openHpModal = (action) => {
-    setHpAction(action);
-    setHpModalOpen(true);
-  };
-
-  const applyHpChange = () => {
-    if (hpAction === "damage") {
-      const damage = Math.max(0, Number(hpAmount) || 0);
-      const currentTemp = Number(stats.tempHP) || 0;
-      const tempAfter = Math.max(0, currentTemp - damage);
-      const remainingDamage = Math.max(0, damage - currentTemp);
-      const newHP = Math.max(0, Math.min(Number(stats.MaxHP) || 0, (Number(stats.HP) || 0) - remainingDamage));
-
-      setStats(prevStats => ({
-        ...prevStats,
-        tempHP: tempAfter,
-        HP: newHP
-      }));
-    } else {
-      const heal = Math.max(0, Number(hpAmount) || 0);
-      const newHP = Math.max(0, Math.min(Number(stats.MaxHP) || 0, (Number(stats.HP) || 0) + heal));
-      setStats(prevStats => ({
-        ...prevStats,
-        HP: newHP
-      }));
-    }
-
-    setHpModalOpen(false);
-    setHpAmount(0);
-    setHpAction("damage"); // Reset action
-  };
-
-  const applyMaxHpChange = () => {
-    if (newMaxHp > 0) {
-      setStats({
-        ...stats,
-        MaxHP: newMaxHp,
-        HP: Math.min(stats.HP, newMaxHp) // Don't let current HP exceed new max
-      });
-    }
-    setMaxHpModalOpen(false);
-    setNewMaxHp(0);
-  };
-
-  const getModifier = (stat) => {
-    const parsedStat = parseInt(stat) || 10;
-    return Math.floor((parsedStat - 10) / 2);
-  };
-
-  const renderMainTab = () => (
-    <div className="space-y-6">
-      {/* HP Bar - only on main tab */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-4">
-          <div className="flex-1">
-            <HPBar 
-              current={stats.HP} 
-              max={stats.MaxHP} 
-              onUpdateHP={(newHP) => setStats(prev => ({...prev, HP: newHP}))}
-              onDamage={() => openHpModal("damage")}
-              onHeal={() => openHpModal("heal")}
-              onEditMax={() => setMaxHpModalOpen(true)}
-            />
-          </div>
-        </div>
-      </div>
-      {/* Temp HP controls */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between parchment-card p-3 rounded-lg">
-          <div className="parchment-text font-semibold">Temp HP: {Number(stats.tempHP) || 0}</div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const val = parseInt(prompt('Add how many temp HP?') || '0');
-                if (isNaN(val) || val <= 0) return;
-                setStats(prev => ({ ...prev, tempHP: Math.max(0, (Number(prev.tempHP) || 0) + val) }));
-              }}
-              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
-              style={{ background: 'linear-gradient(to bottom, #0f766e, #0ea5a4, #0f766e)' }}
-              title="Add Temp HP"
-            >
-              +Temp
-            </button>
-            <button
-              onClick={() => {
-                const val = parseInt(prompt('Remove how many temp HP?') || '0');
-                if (isNaN(val) || val <= 0) return;
-                setStats(prev => ({ ...prev, tempHP: Math.max(0, (Number(prev.tempHP) || 0) - val) }));
-              }}
-              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
-              style={{ background: 'linear-gradient(to bottom, #7f1d1d, #991b1b, #b91c1c)' }}
-              title="Remove Temp HP"
-            >
-              -Temp
-            </button>
-            <button
-              onClick={() => {
-                const val = parseInt(prompt('Set temp HP to what value?') || '0');
-                if (isNaN(val) || val < 0) return;
-                setStats(prev => ({ ...prev, tempHP: val }));
-              }}
-              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
-              style={{ background: 'linear-gradient(to bottom, #1e40af, #2563eb, #1e40af)' }}
-              title="Set Temp HP"
-            >
-              Set Temp
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Death Saving Throws - Show when HP is 0 */}
-      {(Number(stats.HP) || 0) === 0 && (
-        <div className="mb-6">
-          <DeathSavingThrows />
-        </div>
-      )}
-
-      {/* Hit Dice Section */}
-      <Card>
-        <Card.Content>
-          <HitDice
-            level={stats.level}
-            hitDiceSize={stats.hitDiceSize || 8}
-            hitDiceSpent={stats.hitDiceSpent || 0}
-            conMod={getModifier(parseInt(stats.constitution) || 10)}
-            onApplyHealing={(amount) =>
-              setStats(prev => ({
-                ...prev,
-                HP: Math.min(prev.MaxHP, (Number(prev.HP) || 0) + Math.max(0, Number(amount) || 0))
-              }))
-            }
-            onChange={({ hitDiceSize, hitDiceSpent }) =>
-              setStats(prev => ({
-                ...prev,
-                hitDiceSize: hitDiceSize ?? prev.hitDiceSize,
-                hitDiceSpent: hitDiceSpent ?? prev.hitDiceSpent
-              }))
-            }
-          />
-        </Card.Content>
-      </Card>
-
-      <Card>
-        <Card.Content>
-          <div className="parchment-card p-6 rounded-lg">
-            <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
-              <div className="flex-shrink-0">
-                <div className="w-48 h-48 lg:w-56 lg:h-56 rounded-lg overflow-hidden shadow-lg border-4 border-amber-800">
-                  <img 
-                    src="/tortle-portrait.png" 
-                    alt="Tortle Portrait"
-                    className="w-full h-full object-cover object-center"
-                    style={{ objectPosition: 'center 20%' }}
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 space-y-6 text-center lg:text-left">
-                <div>
-                  <div className="flex items-center justify-center lg:justify-start space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-artificerBronze/20 rounded-full flex items-center justify-center">
-                      <span className="text-xl">🐢</span>
-                    </div>
-                    <label className="parchment-text-light font-semibold text-sm uppercase tracking-wide">Character Name</label>
-                  </div>
-                  <input 
-                    type="text" 
-                    value={stats.characterName}
-                    onChange={(e) => setStats({...stats, characterName: e.target.value})}
-                    className="w-full bg-transparent rounded p-3 parchment-text text-2xl lg:text-3xl font-bold focus:outline-none border-b-2 border-artificerBronze/30 focus:border-artificerBronze/60 text-center lg:text-left"
-                    placeholder="Enter your character's name..."
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-center lg:justify-start space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-artificerBronze/20 rounded-full flex items-center justify-center">
-                      <span className="text-xl">⚔️</span>
-                    </div>
-                    <label className="parchment-text-light font-semibold text-sm uppercase tracking-wide">Level</label>
-                  </div>
-                  <div className="flex items-center justify-center lg:justify-start space-x-4">
-                    <button 
-                      onClick={() => setStats({...stats, level: Math.max(1, stats.level - 1)})}
-                      className="w-10 h-10 bg-artificerBronze/20 hover:bg-artificerBronze/30 rounded-full flex items-center justify-center parchment-text font-bold button-glow text-lg"
-                    >
-                      -</button>
-                    <div className="text-4xl font-bold parchment-text mx-4">{stats.level}</div>
-                    <button 
-                      onClick={() => setStats({...stats, level: Math.min(20, stats.level + 1)})}
-                      className="w-10 h-10 bg-artificerBronze/20 hover:bg-artificerBronze/30 rounded-full flex items-center justify-center parchment-text font-bold button-glow text-lg"
-                    >
-                      +</button>
-                  </div>
-                  <div className="parchment-text-light text-sm mt-3 italic">
-                    {stats.level === 1 && "Novice Artificer"}
-                    {stats.level === 2 && "Apprentice Artificer"}
-                    {stats.level === 3 && "Journeyman Artificer"}
-                    {stats.level === 4 && "Skilled Artificer"}
-                    {stats.level === 5 && "Expert Artificer"}
-                    {stats.level >= 6 && stats.level <= 10 && "Master Artificer"}
-                    {stats.level >= 11 && stats.level <= 15 && "Grand Artificer"}
-                    {stats.level >= 16 && "Legendary Artificer"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card.Content>
-      </Card>
-
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-center mb-6" style={{
-          fontFamily: 'Cinzel, serif',
-          color: '#3C2415',
-          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.3)',
-          letterSpacing: '0.05em'
-        }}>ABILITY SCORES</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 justify-items-center">
-          {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => (
-            <div 
-              key={ability}
-              className="relative text-center cursor-pointer hover:scale-105 transition-all duration-200"
-              style={{
-                backgroundImage: 'url(/ability-container.png)',
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                width: '140px',
-                height: '140px'
-              }}
-              onClick={() => {
-                const newValue = parseInt(prompt(`Enter new value for ${ability}:`) || stats[ability]);
-                if (!isNaN(newValue)) {
-                  setStats({
-                    ...stats,
-                    [ability]: newValue
-                  });
-                }
-              }}
-            >
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                <div className="text-sm font-bold leading-tight mb-2" style={{ color: '#3C2415' }}>
-                  {ability === 'constitution' ? 'CON' : 
-                   ability === 'intelligence' ? 'INT' : 
-                   ability === 'dexterity' ? 'DEX' : 
-                   ability === 'charisma' ? 'CHA' : 
-                   ability === 'strength' ? 'STR' : 
-                   ability === 'wisdom' ? 'WIS' : ability}
-                </div>
-                <div className="text-3xl font-bold mb-2" style={{ color: '#3C2415' }}>
-                  {parseInt(stats[ability]) || 10}
-                </div>
-                <div className="text-lg font-semibold" style={{ color: '#3C2415' }}>
-                  {getModifier(parseInt(stats[ability]) || 10) >= 0 ? '+' : ''}
-                  {getModifier(parseInt(stats[ability]) || 10)}
-                </div>
-              </div>
-            </div>
-            ))}
-        </div>
-      </div>
-      
-      {/* Extra spacing at bottom for ability scores */}
-      <div className="h-16"></div>
-    </div>
-  );
-
-  const renderNotesTab = () => (
-    <EnhancedNotes />
-  );
-
-  const renderBackgroundTab = () => (
-    <div className="space-y-6">
-      <BackgroundScribe />
-    </div>
-  );
-
-  const renderCombatTab = () => (
-    <div className="space-y-6">
-      <Card>
-        <Card.Header>Combat Stats</Card.Header>
-        <Card.Content>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="parchment-card p-4 rounded-lg text-center">
-              <div className="parchment-text-light text-sm font-semibold">Armor Class</div>
-              <div className="parchment-text text-2xl font-bold">{Number(stats.armorClass) || 17}</div>
-            </div>
-            <div className="parchment-card p-4 rounded-lg text-center">
-              <div className="parchment-text-light text-sm font-semibold">Initiative</div>
-              <div className="parchment-text text-2xl font-bold">
-                {(getModifier(parseInt(stats.dexterity) || 10) + (Number(stats.initiative) || 0))}
-              </div>
-            </div>
-            <div className="parchment-card p-4 rounded-lg text-center">
-              <div className="parchment-text-light text-sm font-semibold">Speed</div>
-              <div className="parchment-text text-2xl font-bold">{Number(stats.speed) || 30}</div>
-            </div>
-            <div className="parchment-card p-4 rounded-lg text-center">
-              <div className="parchment-text-light text-sm font-semibold">Prof Bonus</div>
-              <div className="parchment-text text-2xl font-bold">+{Number(stats.proficiencyBonus) || 2}</div>
-            </div>
-          </div>
-        </Card.Content>
-      </Card>
-      <Card>
-        <Card.Header>Hit Dice</Card.Header>
-        <Card.Content>
-          <HitDice
-            level={stats.level}
-            hitDiceSize={stats.hitDiceSize || 8}
-            hitDiceSpent={stats.hitDiceSpent || 0}
-            conMod={getModifier(parseInt(stats.constitution) || 10)}
-            onApplyHealing={(amount) =>
-              setStats(prev => ({
-                ...prev,
-                HP: Math.min(prev.MaxHP, (Number(prev.HP) || 0) + Math.max(0, Number(amount) || 0))
-              }))
-            }
-            onChange={({ hitDiceSize, hitDiceSpent }) =>
-              setStats(prev => ({
-                ...prev,
-                hitDiceSize: hitDiceSize ?? prev.hitDiceSize,
-                hitDiceSpent: hitDiceSpent ?? prev.hitDiceSpent
-              }))
-            }
-          />
-        </Card.Content>
-      </Card>
-      <Card>
-        <Card.Header>Actions</Card.Header>
-        <Card.Content>
-          <div className="space-y-4">
-            <ActionCard
-              title="Attack"
-              description="Make one melee or ranged attack"
-              type="action"
-            />
-            <ActionCard
-              title="Shell Defense"
-              description="Withdraw into shell: +4 AC, advantage on STR and CON saves, disadvantage on DEX saves, speed 0"
-              type="action"
-            />
-            <ActionCard
-              title="Dodge"
-              description="Impose disadvantage on attacks against you, advantage on DEX saves"
-              type="action"
-            />
-          </div>
-        </Card.Content>
-      </Card>
-      <Card>
-        <Card.Header>Eldritch Cannon</Card.Header>
-        <Card.Content>
-          <ElditchCannonCard 
-            spellSlots={stats.spellSlots}
-            onUpdateSpellSlots={(newSpellSlots) => setStats({ ...stats, spellSlots: newSpellSlots })}
-          />
-        </Card.Content>
-      </Card>
-    </div>
-  );
-
-  const renderActionsTab = () => (
-    <div className="space-y-6">
-      <EnhancedActions />
-      <QuickActions 
-        stats={stats}
-        proficiencies={proficiencies}
-        savingThrowProficiencies={savingThrowProficiencies}
-        getModifier={getModifier}
-      />
-    </div>
-  );
-
-
-
-  const renderSpellsTab = () => (
-    <div className="space-y-6">
-      <SpellPreparation 
-        level={stats.level}
-        onUpdatePreparedSpells={setPreparedSpells}
-        preparedSpells={preparedSpells}
-      />
-      <SpellSlotTracker 
-        spellSlots={stats.spellSlots}
-        onUpdateSpellSlots={(newSpellSlots) => setStats({...stats, spellSlots: newSpellSlots})}
-        level={stats.level}
-        intelligence={stats.intelligence}
-        proficiencyBonus={stats.proficiencyBonus}
-      />
-      <Card>
-        <Card.Header>Prepared Spells</Card.Header>
-        <Card.Content>
-          <div className="space-y-4">
-            {/* Cantrips */}
-            {(preparedSpells[0] || []).length > 0 && (
-              <div>
-                <h3 className="parchment-text font-semibold mb-2">Cantrips</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {preparedSpells[0].map(spell => (
-                    <SpellCard key={spell} spell={spell} details={SPELL_DETAILS[spell]} level={0} />
-                  ))}
-                </div>
-              </div>
-            )}
-            {/* Leveled Spells */}
-            {[1, 2, 3, 4, 5].map(level => {
-              const levelSpells = preparedSpells[level] || [];
-              if (levelSpells.length === 0) return null;
-              
-              return (
-                <div key={level}>
-                  <h3 className="parchment-text font-semibold mb-2">Level {level} Spells</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {levelSpells.map(spell => (
-                      <SpellCard key={spell} spell={spell} details={SPELL_DETAILS[spell]} level={level} />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-            {Object.values(preparedSpells).flat().length === 0 && (
-              <div className="text-center parchment-text-light py-8">
-                <div className="text-2xl mb-2">📚</div>
-                <div>No spells prepared yet</div>
-                <div className="text-sm">Use the Spell Preparation section above to prepare your spells</div>
-              </div>
-            )}
-          </div>
-        </Card.Content>
-      </Card>
-    </div>
-  );
-
-  const renderInventoryTab = () => {
-    const handleCurrencyUpdate = (type, newAmount) => {
-      setStats(prevStats => ({
-        ...prevStats,
-        currency: {
-          ...prevStats.currency,
-          [type]: newAmount
+  // Debug function to clear and re-migrate
+  const clearAndRemigrate = () => {
+    if (window.confirm('This will clear all character data and re-migrate from old format. Continue?')) {
+      // Clear all character-related localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('character_') || key === 'characters' || key === 'activeCharacterId') {
+          localStorage.removeItem(key);
         }
-      }));
+      });
+      setCharacters({});
+      setActiveCharacterId(null);
+      setCurrentView('dashboard');
+      window.location.reload();
+    }
+  };
+
+  // Data migration from old single-character format
+  useEffect(() => {
+    const migrateOldData = () => {
+      // Check if we have old data that needs migration
+      const oldStats = localStorage.getItem('stats');
+      const oldProficiencies = localStorage.getItem('proficiencies');
+      const oldSavingThrows = localStorage.getItem('savingThrows');
+      
+      console.log('Migration check:', {
+        oldStats: oldStats ? 'found' : 'not found',
+        oldProficiencies: oldProficiencies ? 'found' : 'not found',
+        oldSavingThrows: oldSavingThrows ? 'found' : 'not found',
+        charactersCount: Object.keys(characters).length
+      });
+      
+      if (oldStats && Object.keys(characters).length === 0) {
+        console.log('Migrating old character data to multi-character format...');
+        
+        try {
+          // Create character from old data
+          const stats = JSON.parse(oldStats);
+          const proficiencies = oldProficiencies ? JSON.parse(oldProficiencies) : DEFAULT_PROFICIENCIES;
+          const savingThrows = oldSavingThrows ? JSON.parse(oldSavingThrows) : DEFAULT_SAVING_THROWS;
+          
+          console.log('Parsed old data:', { stats, proficiencies, savingThrows });
+          
+          const characterName = stats.characterName || 'Migrated Character';
+          const characterId = `character_${Date.now()}`;
+          
+          // Create the new character structure
+          const migratedCharacter = {
+            id: characterId,
+            name: characterName,
+            class: stats.class || 'Artificer',
+            level: stats.level || 1,
+            race: stats.race || '',
+            portrait: '/tortle-portrait.png',
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            stats: stats,
+            proficiencies: proficiencies,
+            savingThrows: savingThrows,
+            conditions: [],
+            equipment: DEFAULT_EQUIPMENT,
+            preparedSpells: {},
+            backgroundScribe: {
+              traits: '',
+              ideals: '',
+              bonds: '',
+              flaws: '',
+              originNotes: '',
+              bonusLanguages: ['', '']
+            }
+          };
+          
+          // Add the migrated character
+          setCharacters({ [characterId]: migratedCharacter });
+          setActiveCharacterId(characterId);
+          
+          // Clear old data (optional - keep for safety)
+          // localStorage.removeItem('stats');
+          // localStorage.removeItem('proficiencies');
+          // localStorage.removeItem('savingThrows');
+          
+          console.log('Migration completed successfully!');
+          
+        } catch (error) {
+          console.error('Migration failed:', error);
+        }
+      }
     };
 
-    return (
-      <div className="space-y-6">
-        <CurrencyManager 
-          currency={stats.currency || DEFAULT_STATS.currency}
-          onUpdate={handleCurrencyUpdate}
-        />
-        <Equipment 
-          equipment={equipment}
-          onUpdateEquipment={setEquipment}
-        />
-      </div>
-    );
+    migrateOldData();
+  }, [characters, setCharacters, setActiveCharacterId]);
+
+  const createCharacter = (characterData) => {
+    const characterId = `character_${Date.now()}`;
+    const newCharacter = {
+      id: characterId,
+      name: characterData.name,
+      class: characterData.class,
+      level: characterData.level,
+      race: characterData.race,
+      portrait: null, // Blank for now
+      createdAt: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      stats: { ...DEFAULT_STATS, characterName: characterData.name, level: characterData.level },
+      proficiencies: DEFAULT_PROFICIENCIES,
+      savingThrows: DEFAULT_SAVING_THROWS,
+      conditions: [],
+      equipment: DEFAULT_EQUIPMENT,
+      preparedSpells: {},
+      backgroundScribe: {
+        traits: '',
+        ideals: '',
+        bonds: '',
+        flaws: '',
+        originNotes: '',
+        bonusLanguages: ['', '']
+      }
+    };
+
+    setCharacters(prev => ({ ...prev, [characterId]: newCharacter }));
+    return characterId;
   };
 
-  const renderInfusionsTab = () => (
-    <div className="space-y-6">
-      <InfusionsTracker level={stats.level} />
-    </div>
-  );
+  const selectCharacter = (characterId) => {
+    setActiveCharacterId(characterId);
+    setCurrentView('character');
+  };
 
-  const renderSkillsTab = () => (
-    <div className="space-y-6">
-      <Card>
-        <Card.Header>Skills & Proficiencies</Card.Header>
-        <Card.Content>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {allSkills.map((skill) => {
-              const ability = SKILL_ABILITIES[skill];
-              const abilityMod = getModifier(parseInt(stats[ability]) || 10);
-              const profBonus = proficiencies[skill] ? Number(stats.proficiencyBonus) || 2 : 0;
-              const totalMod = abilityMod + profBonus;
-              
-              return (
-                <div
-                  key={skill}
-                  className="flex items-center justify-between p-3 parchment-card rounded hover:shadow-lg cursor-pointer transition-all duration-200"
-                  onClick={() => toggleProficiency(skill)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={proficiencies[skill]}
-                      readOnly
-                      className="w-4 h-4 accent-artificerBronze"
-                    />
-                    <span className="parchment-text">{skill}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="parchment-text-light text-sm">{ability.toUpperCase()}</span>
-                    <span className="parchment-text ml-2 font-semibold">
-                      {totalMod >= 0 ? '+' : ''}{totalMod}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card.Content>
-      </Card>
-    </div>
-  );
-
-  const renderFeaturesTab = () => (
-    <div className="space-y-6">
-      <FeaturesTracker />
-      <SavingThrows 
-        stats={stats} 
-        savingThrowProficiencies={savingThrowProficiencies}
-        onToggleProficiency={(ability) => {
-          setSavingThrowProficiencies(prev => ({
-            ...prev,
-            [ability]: !prev[ability]
-          }));
-        }}
-      />
-      <ProficienciesLanguages />
-      <ConditionsTracker
-        activeConditions={activeConditions}
-        onToggleCondition={(condition) => {
-          setActiveConditions(prev => 
-            prev.includes(condition) 
-              ? prev.filter(c => c !== condition)
-              : [...prev, condition]
-          );
-        }}
-      />
-    </div>
-  );
-
-
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'main':
-        return renderMainTab();
-      case 'background':
-        return renderBackgroundTab();
-      case 'combat':
-        return renderCombatTab();
-      case 'actions':
-        return renderActionsTab();
-      case 'spells':
-        return renderSpellsTab();
-      case 'infusions':
-        return renderInfusionsTab();
-      case 'skills':
-        return renderSkillsTab();
-      case 'inventory':
-        return renderInventoryTab();
-      case 'features':
-        return renderFeaturesTab();
-      case 'notes':
-        return renderNotesTab();
-      default:
-        return null;
+  const deleteCharacter = (characterId) => {
+    if (characters[characterId]) {
+      const characterName = characters[characterId].name;
+      const confirmDelete = window.confirm(
+        `Are you absolutely sure you want to delete "${characterName}"? This action cannot be undone.`
+      );
+      
+      if (confirmDelete) {
+        setCharacters(prev => {
+          const newCharacters = { ...prev };
+          delete newCharacters[characterId];
+          return newCharacters;
+        });
+        
+        // If we deleted the active character, go back to dashboard
+        if (activeCharacterId === characterId) {
+          setActiveCharacterId(null);
+          setCurrentView('dashboard');
+        }
+        
+        // Clean up character-specific localStorage
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith(`character_${characterId}_`)) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
     }
   };
 
+  const editCharacter = (character) => {
+    // For now, we'll just log this. We can implement editing later
+    console.log('Edit character:', character);
+    // TODO: Open edit modal with character data
+  };
+
+  const backToDashboard = () => {
+    setCurrentView('dashboard');
+  };
+
+  // Get characters array for easier rendering
+  const charactersArray = Object.values(characters);
+
+  // If no characters exist, show dashboard
+  if (currentView === 'dashboard' || charactersArray.length === 0) {
+    return (
+      <CharacterDashboard
+        characters={charactersArray}
+        onSelectCharacter={selectCharacter}
+        onCreateCharacter={createCharacter}
+        onEditCharacter={editCharacter}
+        onDeleteCharacter={deleteCharacter}
+      />
+    );
+  }
+
+  // Show character sheet
+  if (currentView === 'character' && activeCharacterId && characters[activeCharacterId]) {
+    return (
+      <CharacterSheet
+        characterId={activeCharacterId}
+        character={characters[activeCharacterId]}
+        onBackToDashboard={backToDashboard}
+      />
+    );
+  }
+
+  // Fallback to dashboard
   return (
-    <div className="min-h-screen" style={{
-      backgroundImage: 'url(/framed-background.png)',
-      backgroundSize: '100% 100%',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center'
-    }}>
-      {/* Ornate border container */}
-      <div className="min-h-screen relative" style={{
-        border: '12px solid #8B4513',
-        borderImage: 'linear-gradient(45deg, #654321, #8B4513, #A0522D, #8B4513, #654321) 1',
-        margin: '8px',
-        borderRadius: '20px',
-        boxShadow: 'inset 0 0 50px rgba(139, 69, 19, 0.3), 0 0 30px rgba(0, 0, 0, 0.5)'
-      }}>
-
-      {/* Main content */}
-      <div className="max-w-3xl mx-auto p-12 pt-32 pb-32">
-        {/* HP Bar - only on main tab */}
-        {activeTab === 'character' && (
-          <div className="mb-8">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <HPBar 
-                  current={stats.HP} 
-                  max={stats.MaxHP} 
-                  onUpdateHP={(newHP) => setStats(prev => ({...prev, HP: newHP}))} 
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <button 
-                  onClick={() => openHpModal("damage")}
-                  className="bg-red-500/20 hover:bg-red-500/30 px-3 py-2 rounded ink-text font-bold button-glow artificer-border"
-                >
-                  Damage
-                </button>
-                <button 
-                  onClick={() => openHpModal("heal")}
-                  className="bg-green-500/20 hover:bg-green-500/30 px-3 py-2 rounded ink-text font-bold button-glow artificer-border"
-                >
-                  Heal
-                </button>
-                <button 
-                  onClick={() => setMaxHpModalOpen(true)}
-                  className="bg-blue-500/20 hover:bg-blue-500/30 px-3 py-2 rounded ink-text font-bold button-glow artificer-border"
-                  title="Change Max HP"
-                >
-                  Edit HP
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{
-            fontFamily: 'Cinzel, serif',
-            color: '#3C2415',
-            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-            letterSpacing: '0.1em',
-            margin: '2rem 0'
-          }}>CHARACTER SHEET</h1>
-        </div>
-        
-        {/* Ornate Tab Navigation */}
-        <div className="flex justify-center gap-2 mb-8 flex-wrap">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg font-semibold text-sm uppercase tracking-wide transition-all duration-300 ${
-                activeTab === tab.id
-                  ? 'text-amber-100 shadow-inner'
-                  : 'text-amber-100 hover:bg-amber-700/30'
-              }`}
-              style={{
-                background: activeTab === tab.id 
-                  ? 'linear-gradient(135deg, #CD853F 0%, #DAA520 50%, #CD853F 100%)'
-                  : 'linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #8B4513 100%)',
-                border: '2px solid #654321',
-                boxShadow: activeTab === tab.id
-                  ? 'inset 0 3px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)'
-                  : '0 3px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)',
-                fontFamily: 'Cinzel, serif'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        {/* Simple ornate divider */}
-        <div className="text-center my-8">
-          <div className="w-full h-px" style={{ 
-            background: 'linear-gradient(to right, transparent 0%, #8B4513 20%, #8B4513 80%, transparent 100%)' 
-          }}></div>
-        </div>
-        
-        <div className="mt-6">
-          {renderTabContent()}
-        </div>
-      </div>
-
-      {/* HP Modal */}
-      {hpModalOpen && (
-        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50">
-          <div className="parchment-card p-6 rounded-xl shadow-2xl w-80">
-            <h2 className="text-xl font-bold mb-4 parchment-text">
-              {hpAction === "damage" ? "Take Damage" : "Heal HP"}
-            </h2>
-            <input
-              type="number"
-              value={hpAmount}
-              onChange={(e) => setHpAmount(parseInt(e.target.value) || 0)}
-              className="w-full p-2 rounded mb-4 bg-transparent parchment-text border-2 border-artificerBronze/50 focus:border-artificerBronze focus:outline-none"
-              min="0"
-            />
-            <div className="flex justify-end space-x-2">
-              <button 
-                className="px-4 py-2 parchment-text border-2 border-artificerBronze/50 rounded hover:bg-artificerBronze/20"
-                onClick={() => {
-                  setHpModalOpen(false);
-                  setHpAmount(0);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className={`px-4 py-2 parchment-text border-2 rounded font-bold ${
-                  hpAction === "damage" 
-                    ? "border-red-500/70 bg-red-500/20 hover:bg-red-500/30" 
-                    : "border-green-500/70 bg-green-500/20 hover:bg-green-500/30"
-                }`}
-                onClick={applyHpChange}
-              >
-                {hpAction === "damage" ? "Apply Damage" : "Apply Healing"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Max HP Modal */}
-      {maxHpModalOpen && (
-        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50">
-          <div className="parchment-card p-6 rounded-xl shadow-2xl w-80">
-            <h2 className="text-xl font-bold mb-4 parchment-text">
-              Change Max HP
-            </h2>
-            <div className="mb-4">
-              <label className="parchment-text-light text-sm">Current Max HP: {stats.MaxHP}</label>
-            </div>
-            <input
-              type="number"
-              value={newMaxHp}
-              onChange={(e) => setNewMaxHp(parseInt(e.target.value) || 0)}
-              className="w-full p-2 rounded mb-4 bg-transparent parchment-text border-2 border-artificerBronze/50 focus:border-artificerBronze focus:outline-none"
-              min="1"
-              placeholder="Enter new max HP"
-            />
-            <div className="flex justify-end space-x-2">
-              <button 
-                className="px-4 py-2 parchment-text border-2 border-artificerBronze/50 rounded hover:bg-artificerBronze/20"
-                onClick={() => {
-                  setMaxHpModalOpen(false);
-                  setNewMaxHp(0);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 parchment-text border-2 border-blue-500/70 bg-blue-500/20 hover:bg-blue-500/30 rounded font-bold"
-                onClick={applyMaxHpChange}
-              >
-                Update Max HP
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      </div>
-    </div>
+    <CharacterDashboard
+      characters={charactersArray}
+      onSelectCharacter={selectCharacter}
+      onCreateCharacter={createCharacter}
+      onEditCharacter={editCharacter}
+      onDeleteCharacter={deleteCharacter}
+    />
   );
 }
