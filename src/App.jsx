@@ -4,12 +4,8 @@ import './styles/enhancements.css';
 import HPBar from './components/HPBar';
 import HitDice from './components/HitDice';
 import BackgroundScribe from './components/BackgroundScribe';
-import Button from './components/Button';
 import Card from './components/Card';
-import Tabs from './components/Tabs';
-import StatBox from './components/StatBox';
 import ActionCard from './components/ActionCard';
-import CurrencyInput from './components/CurrencyInput';
 import SpellCard from './components/SpellCard';
 import ElditchCannonCard from './components/ElditchCannonCard';
 import CurrencyManager from './components/CurrencyManager';
@@ -24,7 +20,8 @@ import SpellPreparation from './components/SpellPreparation';
 import InfusionsTracker from './components/InfusionsTracker';
 import EnhancedActions from './components/EnhancedActions';
 import EnhancedNotes from './components/EnhancedNotes';
-import { ARTIFICER_CANTRIPS, ARTIFICER_SPELLS, SPELL_DETAILS } from './data/spells';
+import DeathSavingThrows from './components/DeathSavingThrows';
+import { SPELL_DETAILS } from './data/spells';
 import { DEFAULT_EQUIPMENT } from './data/equipment';
 
 const allSkills = [
@@ -86,14 +83,6 @@ const DEFAULT_STATS = {
   }
 };
 
-const DEFAULT_NOTES = {
-  personalNotes: '',
-  organizations: [],
-  contacts: [],
-  questLog: [],
-  quickNotes: '',
-  background: ''
-};
 
 const SKILL_ABILITIES = {
   "Acrobatics": "dexterity",
@@ -118,7 +107,6 @@ const SKILL_ABILITIES = {
 
 export default function App() {
   const [stats, setStats] = usePersistentState("stats", DEFAULT_STATS);
-  const [notes, setNotes] = usePersistentState("notes", DEFAULT_NOTES);
   const [proficiencies, setProficiencies] = usePersistentState("proficiencies", {
     // Initialize all skills as not proficient
     "Acrobatics": false,
@@ -152,15 +140,15 @@ export default function App() {
   const [equipment, setEquipment] = usePersistentState('equipment', DEFAULT_EQUIPMENT);
   const [preparedSpells, setPreparedSpells] = usePersistentState('preparedSpells', {});
   
-  // Add this useEffect to ensure spellSlots are properly initialized
+  // Ensure spellSlots are properly initialized
   React.useEffect(() => {
     if (!stats.spellSlots) {
-      setStats({
-        ...stats,
+      setStats(prev => ({
+        ...prev,
         spellSlots: DEFAULT_STATS.spellSlots
-      });
+      }));
     }
-  }, []);
+  }, [stats.spellSlots]);
 
   const [hpModalOpen, setHpModalOpen] = useState(false);
   const [hpAmount, setHpAmount] = useState(0);
@@ -191,14 +179,27 @@ export default function App() {
   };
 
   const applyHpChange = () => {
-    const amt = hpAction === "damage" ? -hpAmount : hpAmount;
-    const newHP = Math.max(0, Math.min(stats.MaxHP, stats.HP + amt));
-    
-    setStats(prevStats => ({
-      ...prevStats,
-      HP: newHP
-    }));
-    
+    if (hpAction === "damage") {
+      const damage = Math.max(0, Number(hpAmount) || 0);
+      const currentTemp = Number(stats.tempHP) || 0;
+      const tempAfter = Math.max(0, currentTemp - damage);
+      const remainingDamage = Math.max(0, damage - currentTemp);
+      const newHP = Math.max(0, Math.min(Number(stats.MaxHP) || 0, (Number(stats.HP) || 0) - remainingDamage));
+
+      setStats(prevStats => ({
+        ...prevStats,
+        tempHP: tempAfter,
+        HP: newHP
+      }));
+    } else {
+      const heal = Math.max(0, Number(hpAmount) || 0);
+      const newHP = Math.max(0, Math.min(Number(stats.MaxHP) || 0, (Number(stats.HP) || 0) + heal));
+      setStats(prevStats => ({
+        ...prevStats,
+        HP: newHP
+      }));
+    }
+
     setHpModalOpen(false);
     setHpAmount(0);
     setHpAction("damage"); // Reset action
@@ -238,6 +239,57 @@ export default function App() {
           </div>
         </div>
       </div>
+      {/* Temp HP controls */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between parchment-card p-3 rounded-lg">
+          <div className="parchment-text font-semibold">Temp HP: {Number(stats.tempHP) || 0}</div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const val = parseInt(prompt('Add how many temp HP?') || '0');
+                if (isNaN(val) || val <= 0) return;
+                setStats(prev => ({ ...prev, tempHP: Math.max(0, (Number(prev.tempHP) || 0) + val) }));
+              }}
+              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
+              style={{ background: 'linear-gradient(to bottom, #0f766e, #0ea5a4, #0f766e)' }}
+              title="Add Temp HP"
+            >
+              +Temp
+            </button>
+            <button
+              onClick={() => {
+                const val = parseInt(prompt('Remove how many temp HP?') || '0');
+                if (isNaN(val) || val <= 0) return;
+                setStats(prev => ({ ...prev, tempHP: Math.max(0, (Number(prev.tempHP) || 0) - val) }));
+              }}
+              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
+              style={{ background: 'linear-gradient(to bottom, #7f1d1d, #991b1b, #b91c1c)' }}
+              title="Remove Temp HP"
+            >
+              -Temp
+            </button>
+            <button
+              onClick={() => {
+                const val = parseInt(prompt('Set temp HP to what value?') || '0');
+                if (isNaN(val) || val < 0) return;
+                setStats(prev => ({ ...prev, tempHP: val }));
+              }}
+              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
+              style={{ background: 'linear-gradient(to bottom, #1e40af, #2563eb, #1e40af)' }}
+              title="Set Temp HP"
+            >
+              Set Temp
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Death Saving Throws - Show when HP is 0 */}
+      {(Number(stats.HP) || 0) === 0 && (
+        <div className="mb-6">
+          <DeathSavingThrows />
+        </div>
+      )}
 
       {/* Hit Dice Section */}
       <Card>

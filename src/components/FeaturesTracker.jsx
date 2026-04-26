@@ -46,6 +46,12 @@ const FeaturesTracker = () => {
       type: "action",
       used: false,
       cooldown: "action"
+    },
+    // Feats
+    "Elemental Adept (Fire)": {
+      description: "When you cast a spell that deals fire damage, you can treat any 1s on the damage dice as 2s. Fire spells ignore resistance to fire damage.",
+      type: "passive",
+      used: false
     }
   });
 
