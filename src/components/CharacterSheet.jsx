@@ -210,6 +210,107 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
   const [maxHpModalOpen, setMaxHpModalOpen] = useState(false);
   const [newMaxHp, setNewMaxHp] = useState(0);
   const [activeTab, setActiveTab] = useState('main');
+  
+  // States for conditions autocomplete
+  const [inputValue, setInputValue] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  // States for customizable quick actions and attacks
+  const [customQuickActions, setCustomQuickActions] = usePersistentState(`${characterDataPrefix}_customQuickActions`, []);
+  const [customAttacks, setCustomAttacks] = usePersistentState(`${characterDataPrefix}_customAttacks`, []);
+  
+  // States for quick actions autocomplete
+  const [quickActionInput, setQuickActionInput] = useState('');
+  const [quickActionSuggestions, setQuickActionSuggestions] = useState([]);
+  const [showQuickActionSuggestions, setShowQuickActionSuggestions] = useState(false);
+  
+  // Common D&D 5e conditions for autocomplete
+  const COMMON_CONDITIONS = [
+    'Blinded', 'Charmed', 'Deafened', 'Frightened', 'Grappled', 'Incapacitated',
+    'Invisible', 'Paralyzed', 'Petrified', 'Poisoned', 'Prone', 'Restrained',
+    'Stunned', 'Unconscious', 'Exhaustion', 'Concentrating', 'Dominated',
+    'Confused', 'Nauseated', 'Diseased', 'Cursed', 'Invisible'
+  ];
+
+  // All available actions for quick actions autocomplete
+  const ALL_AVAILABLE_ACTIONS = [
+    // Standard Actions
+    'Attack', 'Cast a Spell', 'Dash', 'Disengage', 'Dodge', 'Help', 'Hide', 'Ready', 'Search', 'Use an Object',
+    'Grapple', 'Shove', 'Improvise Weapon', 'Unarmed Strike', 'Two-Weapon Attack', 'Opportunity Attack',
+    
+    // Bonus Actions
+    'Second Wind', 'Action Surge', 'Rage', 'Unarmored Defense', 'Reckless Attack', 'Danger Sense', 'Feral Instinct',
+    'Fast Movement', 'Brutal Critical', 'Relentless Rage', 'Persistent Rage', 'Indomitable Might', 'Primal Champion',
+    'Infuse Item', 'Flash of Genius', 'Shield', 'Artificer Infusion', 'Magical Tinkering', 'Spell-Storing Item',
+    'Eldritch Cannon', 'Firebolt Cantrip', 'Shell Defense', 'Turtle Defense', 'Natural Armor',
+    'Second Wind (Fighter)', 'Battle Master Maneuver', 'Superiority Dice', 'Action Surge (Fighter)',
+    'Fighting Style', 'Second Wind (Warlock)', 'Eldritch Blast', 'Hexblade\'s Curse', 'Armor of Shadows',
+    'Bardic Inspiration', 'Song of Rest', 'Font of Inspiration', 'Expertise', 'Jack of All Trades',
+    'Subclass Feature', 'Metamagic', 'Sorcery Points', 'Font of Magic', 'Arcane Recovery',
+    'Divine Smite', 'Lay on Hands', 'Divine Sense', 'Fighting Style (Paladin)', 'Aura of Protection',
+    'Aura of Courage', 'Improved Divine Smite', 'Cleansing Touch', 'Channel Divinity', 'Sacred Oath',
+    
+    // Reactions
+    'Opportunity Attack', 'Shield Spell', 'Counterspell', 'Feather Fall', 'Absorb Elements', 'Protection',
+    'Riposte', 'Parry', 'Uncanny Dodge', 'Evasion', 'Defensive Duelist', 'Shield Master',
+    'Sentinel', 'War Caster', 'Mage Slayer', 'Grappler', 'Tavern Brawler', 'Mobile',
+    'Charger', 'Tavern Brawler', 'Tough', 'Resilient', 'Athlete', 'Heavily Armored',
+    'Moderately Armored', 'Lightly Armored', 'Weapon Master', 'Keen Mind', 'Linguist',
+    'Actor', 'Alert', 'Athlete', 'Charger', 'Crossbow Expert', 'Dual Wielder',
+    'Grappler', 'Great Weapon Master', 'Healer', 'Heavy Armor Master', 'Inspiring Leader',
+    'Keen Mind', 'Lightly Armored', 'Linguist', 'Lucky', 'Mage Slayer', 'Mobile',
+    'Moderately Armored', 'Mounted Combatant', 'Observant', 'Polearm Master', 'Resilient',
+    'Ritual Caster', 'Sentinel', 'Sharpshooter', 'Shield Master', 'Skilled', 'Skulker',
+    'Spell Sniper', 'Tavern Brawler', 'Tough', 'War Caster', 'Weapon Master',
+    
+    // Special Actions
+    'Long Rest', 'Short Rest', 'Hit Dice Recovery', 'Death Saving Throw', 'Stabilize', 'First Aid',
+    'Identify Magic Item', 'Attune Magic Item', 'Use Magic Item', 'Drink Potion', 'Apply Oil',
+    'Use Scroll', 'Use Wand', 'Read Magic', 'Detect Magic', 'Identify', 'Dispel Magic',
+    'Break Object', 'Repair Object', 'Craft Item', 'Forge Document', 'Pick Lock', 'Disarm Trap',
+    'Set Trap', 'Track', 'Survive', 'Forage', 'Hunt', 'Gather Resources',
+    'Build Camp', 'Start Fire', 'Cook Meal', 'Clean Equipment', 'Maintain Armor', 'Sharpen Weapon',
+    'Study', 'Research', 'Consult Expert', 'Gather Information', 'Interrogate', 'Persuade',
+    'Intimidate', 'Deceive', 'Bargain', 'Perform', 'Play Instrument', 'Tell Story',
+    'Pray', 'Meditate', 'Commune', 'Divination', 'Scry', 'Contact Other Plane',
+    'Wild Shape', 'Beast Sense', 'Speak with Animals', 'Speak with Plants', 'Speak with Stones',
+    'Elemental Communication', 'Telepathy', 'Detect Thoughts', 'Suggestion', 'Charm Person',
+    'Command', 'Fear', 'Hold Person', 'Sleep', 'Magic Missile', 'Fireball',
+    'Lightning Bolt', 'Cone of Cold', 'Chain Lightning', 'Teleport', 'Plane Shift',
+    'Gate', 'Wish', 'Time Stop', 'True Polymorph', 'Antimagic Field', 'Force Cage',
+    
+    // Movement Actions
+    'Climb', 'Swim', 'Fly', 'Burrow', 'Jump', 'Run', 'Sprint', 'Dash (Bonus)', 'Disengage (Bonus)',
+    'Hide (Bonus)', 'Ready (Bonus)', 'Stand Up', 'Crawl', 'Squeeze', 'Escape Grapple',
+    'Break Grapple', 'Maintain Grapple', 'Move Prone', 'Stand from Prone', 'Help (Bonus)',
+    'Use Object (Bonus)', 'Interact with Object', 'Open Door', 'Close Door', 'Unlock Door',
+    'Lock Door', 'Search Area', 'Investigate', 'Perception Check', 'Investigation Check',
+    'Insight Check', 'Medicine Check', 'Nature Check', 'Religion Check', 'Arcana Check',
+    'History Check', 'Performance Check', 'Persuasion Check', 'Deception Check', 'Intimidation Check',
+    
+    // Combat Maneuvers
+    'Trip Attack', 'Disarming Attack', 'Menacing Attack', 'Pushing Attack', 'Sweeping Attack',
+    'Rally', 'Feinting Attack', 'Lunging Attack', 'Precision Attack', 'Commanding Presence',
+    'Grappling Strike', 'Disarming Strike', 'Tripping Attack', 'Sundering Strike', 'Menacing Strike',
+    'Bait and Switch', 'Distracting Strike', 'Parry', 'Riposte', 'Lunge', 'Sweep',
+    'Tumble', 'Dodge and Weave', 'Block', 'Parry and Riposte', 'Counter Attack', 'Flurry of Blows',
+    'Patient Defense', 'Step of the Wind', 'Stunning Strike', 'Quivering Palm', 'Deflect Missiles',
+    'Slow Fall', 'Catch Projectile', 'Arrow Catching', 'Snatch Arrows', 'Deflect Missiles (Monk)',
+    'Ki Points', 'Martial Arts', 'Unarmored Movement', 'Stillness of Mind', 'Purity of Body',
+    
+    // Special Abilities
+    'Darkvision', 'Superior Darkvision', 'Devil\'s Sight', 'Truesight', 'Blindsight', 'Tremorsense',
+    'Invisibility', 'Greater Invisibility', 'Etherealness', 'Gaseous Form', 'Stone Shape', 'Passwall',
+    'Telekinesis', 'Telepathic Bond', 'Rary\'s Telepathic Bond', 'Sending', 'Message', 'Whisper',
+    'Comprehend Languages', 'Tongues', 'Speak with Dead', 'Speak with Animals', 'Speak with Plants',
+    'Animal Friendship', 'Animal Handling', 'Calming Animals', 'Soothe Animals', 'Command Animals',
+    'Beast Bond', 'Fey Ancestry', 'Fascination', 'Mirthful Runes', 'Natural Explorer',
+    'Favored Enemy', 'Explorer\'s Lore', 'Wanderer', 'Dreadful Strikes', 'Paralyzing Strikes',
+    'Venomous Strikes', 'Symbiotic Entity', 'Wild Companion', 'Primal Strike', 'Guardian Spirit',
+    'Nature\'s Veil', 'Feral Senses', 'Walker in Dreams', 'Eyes of the Forest', 'Eyes of the Mountain',
+    'Eyes of the Sea', 'Eyes of the Storm', 'Eyes of the Desert', 'Eyes of the Underdark'
+  ];
 
   const tabs = [
     { id: 'main', label: 'Character' },
@@ -327,7 +428,39 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
             
             {/* Abilities Card */}
             <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Abilities</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-[#654321] text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Abilities</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="text-sm font-semibold text-[#654321]">Level</div>
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={() => {
+                        const newLevel = Math.max(1, stats.level - 1);
+                        const newStats = { ...stats, level: newLevel };
+                        setStats(newStats);
+                        updateCharacterData({ 
+                          stats: newStats,
+                          level: newLevel
+                        });
+                      }}
+                      className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
+                    >−</button>
+                    <span className="font-bold text-[#654321] px-2 text-sm">{stats.level}</span>
+                    <button 
+                      onClick={() => {
+                        const newLevel = Math.min(20, stats.level + 1);
+                        const newStats = { ...stats, level: newLevel };
+                        setStats(newStats);
+                        updateCharacterData({ 
+                          stats: newStats,
+                          level: newLevel
+                        });
+                      }}
+                      className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
+                    >+</button>
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => {
                   const value = parseInt(stats[ability]) || 10;
@@ -525,13 +658,66 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               </div>
             </div>
 
-            {/* Simplified Attacks Block */}
+            {/* Attacks/Spells Block */}
             <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Attacks</h3>
+              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>
+                {characterClass === 'Artificer' ? 'Spells/Cantrips' : 'Attacks'}
+              </h3>
               <div className="space-y-3 mb-4">
-                {/* Three key weapons */}
                 {(() => {
-                  if (characterClass === 'Barbarian') {
+                  if (characterClass === 'Artificer') {
+                    // Show prepared spells and cantrips for Artificer
+                    const allPreparedSpells = [];
+                    
+                    // Add cantrips (level 0)
+                    if (preparedSpells[0]) {
+                      preparedSpells[0].forEach(spell => {
+                        allPreparedSpells.push({
+                          name: spell,
+                          type: 'Cantrip',
+                          icon: '✨',
+                          details: SPELL_DETAILS[spell] || {}
+                        });
+                      });
+                    }
+                    
+                    // Add prepared spells (levels 1+)
+                    for (let level = 1; level <= 9; level++) {
+                      if (preparedSpells[level]) {
+                        preparedSpells[level].forEach(spell => {
+                          allPreparedSpells.push({
+                            name: spell,
+                            type: `Level ${level}`,
+                            icon: '🔮',
+                            details: SPELL_DETAILS[spell] || {}
+                          });
+                        });
+                      }
+                    }
+                    
+                    if (allPreparedSpells.length === 0) {
+                      return (
+                        <div className="text-sm text-[#8B4513] text-center py-4">No spells prepared</div>
+                      );
+                    }
+                    
+                    return allPreparedSpells.map((spell, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">{spell.icon}</span>
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">{spell.name}</div>
+                            <div className="text-sm text-[#8B4513]">{spell.type}</div>
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold text-[#654321]">
+                          {spell.details.damage ? spell.details.damage : '—'}
+                        </div>
+                      </div>
+                    ));
+                    
+                  } else if (characterClass === 'Barbarian') {
+                    // Show attacks for Barbarian
                     return (
                       <>
                         <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
@@ -557,33 +743,8 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                         </div>
                       </>
                     );
-                  } else if (characterClass === 'Artificer') {
-                    return (
-                      <>
-                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                          <div className="flex-1">
-                            <div className="font-semibold text-[#654321]">Light Hammer</div>
-                            <div className="text-sm text-[#8B4513]">+{strMod} | 1d4 + 1</div>
-                          </div>
-                          <div className="text-sm font-bold text-[#654321]">1d4 + 1</div>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                          <div className="flex-1">
-                            <div className="font-semibold text-[#654321]">Crossbow</div>
-                            <div className="text-sm text-[#8B4513]">+{dexMod} | 1d8</div>
-                          </div>
-                          <div className="text-sm font-bold text-[#654321]">1d8</div>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                          <div className="flex-1">
-                            <div className="font-semibold text-[#654321]">Dagger</div>
-                            <div className="text-sm text-[#8B4513]">+{dexMod} | 1d4</div>
-                          </div>
-                          <div className="text-sm font-bold text-[#654321]">1d4</div>
-                        </div>
-                      </>
-                    );
                   } else {
+                    // Default attacks for other classes
                     return (
                       <>
                         <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
@@ -613,10 +774,10 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                 })()}
               </div>
               <button 
-                onClick={() => setActiveTab('actions')}
+                onClick={() => setActiveTab(characterClass === 'Artificer' ? 'spells' : 'actions')}
                 className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
               >
-                View All Attacks
+                View All {characterClass === 'Artificer' ? 'Spells' : 'Attacks'}
               </button>
             </div>
           </div>
@@ -629,65 +790,146 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Quick Actions</h3>
               <div className="space-y-2 mb-4">
                 {(() => {
-                  if (characterClass === 'Barbarian') {
-                    return (
-                      <>
-                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                          <span className="text-lg">⚔️</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#654321]">Rage</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                          <span className="text-lg">🛡️</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#654321]">Unarmored Defense</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                          <span className="text-lg">⚡</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#654321]">Reckless Attack</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                          <span className="text-lg">👁️</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#654321]">Danger Sense</div>
-                          </div>
-                        </div>
-                      </>
-                    );
-                  } else if (characterClass === 'Artificer') {
-                    return (
-                      <>
-                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                          <span className="text-lg">🔧</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#654321]">Infuse Item</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                          <span className="text-lg">⚡</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#654321]">Flash of Genius</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                          <span className="text-lg">🛡️</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#654321]">Shield</div>
-                          </div>
-                        </div>
-                      </>
-                    );
-                  } else {
+                  // Get all actions (default + custom)
+                  const getAllActions = () => {
+                    const defaultActions = [];
+                    
+                    if (characterClass === 'Barbarian') {
+                      defaultActions.push(
+                        { name: 'Rage', icon: '⚔️' },
+                        { name: 'Unarmored Defense', icon: '🛡️' },
+                        { name: 'Reckless Attack', icon: '⚡' },
+                        { name: 'Danger Sense', icon: '👁️' }
+                      );
+                    } else if (characterClass === 'Artificer') {
+                      defaultActions.push(
+                        { name: 'Infuse Item', icon: '🔧' },
+                        { name: 'Shield', icon: '🛡️' }
+                      );
+                    } else if (character?.name === 'Inituga' && character?.race === 'Tortle') {
+                      defaultActions.push(
+                        { name: 'Eldritch Cannon', icon: '🔫' },
+                        { name: 'Firebolt Cantrip', icon: '⚡' },
+                        { name: 'Shell Defense', icon: '🛡️' }
+                      );
+                    }
+                    
+                    // Add custom actions with default icon
+                    const customActionsWithIcons = customQuickActions.map(action => ({
+                      name: action,
+                      icon: '⚙️'
+                    }));
+                    
+                    return [...defaultActions, ...customActionsWithIcons];
+                  };
+
+                  const allActions = getAllActions();
+                  
+                  if (allActions.length === 0) {
                     return (
                       <div className="text-sm text-[#8B4513] text-center py-4">No quick actions available</div>
                     );
                   }
+
+                  return allActions.map((action, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                      <span className="text-lg">{action.icon}</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321]">{action.name}</div>
+                      </div>
+                      {customQuickActions.includes(action.name) && (
+                        <button
+                          onClick={() => setCustomQuickActions(prev => prev.filter(a => a !== action.name))}
+                          className="text-red-500 hover:text-red-700 text-xs ml-2"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  ));
                 })()}
               </div>
+              
+              {/* Add Custom Action Input */}
+              <div className="mb-4">
+                <div className="relative">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add custom quick action..."
+                      className="flex-1 min-w-0 px-2 py-1 border border-[#d4c8a8] rounded text-sm"
+                      value={quickActionInput}
+                      onChange={(e) => {
+                        const value = e.target.value.trim();
+                        setQuickActionInput(value);
+                        if (value.length > 0) {
+                          const filtered = ALL_AVAILABLE_ACTIONS.filter(action =>
+                            action.toLowerCase().includes(value.toLowerCase())
+                          );
+                          setQuickActionSuggestions(filtered);
+                          setShowQuickActionSuggestions(true);
+                        } else {
+                          setShowQuickActionSuggestions(false);
+                        }
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          const action = quickActionInput.trim();
+                          if (action && !customQuickActions.includes(action)) {
+                            setCustomQuickActions(prev => [...prev, action]);
+                            setQuickActionInput('');
+                            setShowQuickActionSuggestions(false);
+                          }
+                        }
+                      }}
+                      onFocus={() => {
+                        if (quickActionInput.length > 0) {
+                          const filtered = ALL_AVAILABLE_ACTIONS.filter(action =>
+                            action.toLowerCase().includes(quickActionInput.toLowerCase())
+                          );
+                          setQuickActionSuggestions(filtered);
+                          setShowQuickActionSuggestions(true);
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const action = quickActionInput.trim();
+                        if (action && !customQuickActions.includes(action)) {
+                          setCustomQuickActions(prev => [...prev, action]);
+                          setQuickActionInput('');
+                          setShowQuickActionSuggestions(false);
+                        }
+                      }}
+                      className="px-2 py-1 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-xs font-semibold whitespace-nowrap"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  
+                  {/* Autocomplete Dropdown */}
+                  {showQuickActionSuggestions && quickActionSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#d4c8a8] rounded shadow-lg z-10 max-h-40 overflow-y-auto">
+                      {quickActionSuggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-[#f5e6d3] cursor-pointer text-sm text-[#654321]"
+                          onClick={() => {
+                            if (!customQuickActions.includes(suggestion)) {
+                              setCustomQuickActions(prev => [...prev, suggestion]);
+                            }
+                            setQuickActionInput('');
+                            setShowQuickActionSuggestions(false);
+                          }}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               <button 
                 onClick={() => setActiveTab('actions')}
                 className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
@@ -699,6 +941,78 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
             {/* Conditions Block */}
             <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
               <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Conditions</h3>
+              
+              {/* Add Condition Input */}
+              <div className="mb-3">
+                <div className="relative w-full">
+                  <div className="flex gap-2 w-full">
+                    <input
+                      type="text"
+                      placeholder="Enter condition name..."
+                      className="flex-1 min-w-0 px-3 py-2 border border-[#d4c8a8] rounded text-sm"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          const input = e.target;
+                          const condition = input.value.trim();
+                          if (condition && !activeConditions.includes(condition)) {
+                            setActiveConditions(prev => [...prev, condition]);
+                            input.value = '';
+                            setShowSuggestions(false);
+                          }
+                        }
+                      }}
+                      onChange={(e) => {
+                        const value = e.target.value.trim();
+                        setInputValue(value);
+                        if (value.length > 0) {
+                          const filtered = COMMON_CONDITIONS.filter(condition =>
+                            condition.toLowerCase().includes(value.toLowerCase())
+                          );
+                          setSuggestions(filtered);
+                          setShowSuggestions(true);
+                        } else {
+                          setShowSuggestions(false);
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const input = document.querySelector('input[placeholder="Enter condition name..."]');
+                        const condition = input.value.trim();
+                        if (condition && !activeConditions.includes(condition)) {
+                          setActiveConditions(prev => [...prev, condition]);
+                          input.value = '';
+                          setShowSuggestions(false);
+                        }
+                      }}
+                      className="px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors whitespace-nowrap"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  
+                  {/* Autocomplete Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#d4c8a8] rounded shadow-lg z-10 max-h-40 overflow-y-auto">
+                      {suggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-[#f5e6d3] cursor-pointer text-sm"
+                          onClick={() => {
+                            const input = document.querySelector('input[placeholder="Enter condition name..."]');
+                            input.value = suggestion;
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Conditions List */}
               <div className="space-y-2">
                 {activeConditions.length > 0 ? (
                   activeConditions.map((condition, index) => (
@@ -1321,17 +1635,13 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
 
             {/* Center: Character Info */}
             <div className="flex items-center space-x-4 flex-1 justify-center">
-              {/* Portrait Thumbnail */}
-              <div className="w-12 h-12 rounded overflow-hidden border border-[#d4c8a8] bg-[#f5e6d3] flex items-center justify-center flex-shrink-0">
-                {character?.portrait ? (
-                  <img 
-                    src={character.portrait} 
-                    alt={`${character.name} Portrait`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-lg">👤</div>
-                )}
+              {/* Character Portrait */}
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#8B4513] shadow-lg">
+                <img 
+                  src={character?.portrait || '/default-character-portrait.png'} 
+                  alt={character?.name || 'Character'} 
+                  className="w-full h-full object-cover"
+                />
               </div>
               
               {/* Character Name and Details */}
