@@ -312,294 +312,509 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     return '';
   };
 
-  const renderMainTab = () => (
-    <div className="space-y-6">
-      {/* HP Bar - only on main tab */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-4">
-          <div className="flex-1">
-            <HPBar 
-              current={stats.HP} 
-              max={stats.MaxHP} 
-              onUpdateHP={(newHP) => {
-              const newStats = { ...stats, HP: newHP };
-              setStats(newStats);
-              updateCharacterData({ stats: newStats });
-            }}
-              onDamage={() => openHpModal("damage")}
-              onHeal={() => openHpModal("heal")}
-              onEditMax={() => setMaxHpModalOpen(true)}
-            />
-          </div>
-        </div>
-      </div>
-      {/* Temp HP controls */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between parchment-card p-3 rounded-lg">
-          <div className="parchment-text font-semibold">Temp HP: {Number(stats.tempHP) || 0}</div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const input = prompt('Add how many temp HP?', '1');
-                if (input !== null && input.trim() !== '') {
-                  const val = parseInt(input);
-                  if (!isNaN(val) && val > 0) {
-                    const newStats = { ...stats, tempHP: Math.max(0, (Number(stats.tempHP) || 0) + val) };
-                    setStats(newStats);
-                    updateCharacterData({ stats: newStats });
-                  }
-                }
-              }}
-              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
-              style={{ background: 'linear-gradient(to bottom, #0f766e, #0ea5a4, #0f766e)' }}
-              title="Add Temp HP"
-            >
-              +Temp
-            </button>
-            <button
-              onClick={() => {
-                const currentTemp = Number(stats.tempHP) || 0;
-                const input = prompt('Remove how many temp HP?', Math.min(1, currentTemp).toString());
-                if (input !== null && input.trim() !== '') {
-                  const val = parseInt(input);
-                  if (!isNaN(val) && val > 0) {
-                    const newStats = { ...stats, tempHP: Math.max(0, (Number(stats.tempHP) || 0) - val) };
-                    setStats(newStats);
-                    updateCharacterData({ stats: newStats });
-                  }
-                }
-              }}
-              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
-              style={{ background: 'linear-gradient(to bottom, #7f1d1d, #991b1b, #b91c1c)' }}
-              title="Remove Temp HP"
-            >
-              -Temp
-            </button>
-            <button
-              onClick={() => {
-                const currentTemp = Number(stats.tempHP) || 0;
-                const input = prompt('Set temp HP to what value?', currentTemp.toString());
-                if (input !== null && input.trim() !== '') {
-                  const val = parseInt(input);
-                  if (!isNaN(val) && val >= 0) {
-                    const newStats = { ...stats, tempHP: val };
-                    setStats(newStats);
-                    updateCharacterData({ stats: newStats });
-                  }
-                }
-              }}
-              className="px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-all"
-              style={{ background: 'linear-gradient(to bottom, #1e40af, #2563eb, #1e40af)' }}
-              title="Set Temp HP"
-            >
-              Set Temp
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Death Saving Throws - Show when HP is 0 */}
-      {(Number(stats.HP) || 0) === 0 && (
-        <div className="mb-6">
-          <DeathSavingThrows characterDataPrefix={characterDataPrefix} />
-        </div>
-      )}
-
-      {/* Hit Dice Section */}
-      <Card>
-        <Card.Content>
-          <HitDice
-            level={stats.level}
-            hitDiceSize={stats.hitDiceSize || 8}
-            hitDiceSpent={stats.hitDiceSpent || 0}
-            conMod={getModifier(parseInt(stats.constitution) || 10)}
-            onApplyHealing={(amount) => {
-              const newStats = {
-                ...stats,
-                HP: Math.min(stats.MaxHP, (Number(stats.HP) || 0) + Math.max(0, Number(amount) || 0))
-              };
-              setStats(newStats);
-              updateCharacterData({ stats: newStats });
-            }}
-            onChange={({ hitDiceSize, hitDiceSpent }) => {
-              const newStats = {
-                ...stats,
-                hitDiceSize: hitDiceSize ?? stats.hitDiceSize,
-                hitDiceSpent: hitDiceSpent ?? stats.hitDiceSpent
-              };
-              setStats(newStats);
-              updateCharacterData({ stats: newStats });
-            }}
-          />
-        </Card.Content>
-      </Card>
-
-      <Card>
-        <Card.Content>
-          <div className="parchment-card p-6 rounded-lg">
-            <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
-              <div className="flex-shrink-0">
-                <div className="w-48 h-48 lg:w-56 lg:h-56 rounded-lg overflow-hidden shadow-lg border-4 border-amber-800 bg-gray-700/50 flex items-center justify-center">
-                  {character?.portrait ? (
-                    <img 
-                      src={character.portrait} 
-                      alt={`${character.name} Portrait`}
-                      className="w-full h-full object-cover object-center"
-                      style={{ objectPosition: 'center 20%' }}
-                    />
-                  ) : (
-                    <div className="text-center">
-                      <div className="text-6xl mb-2">👤</div>
-                      <div className="text-sm parchment-text-light">No Portrait</div>
+  const renderMainTab = () => {
+    const characterClass = character?.class || stats.class || 'Artificer';
+    const strMod = getModifier(parseInt(stats.strength) || 10);
+    const dexMod = getModifier(parseInt(stats.dexterity) || 10);
+    
+    return (
+      <div className="min-h-screen bg-[#fdf6e8] p-4">
+        {/* Three Column Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
+          
+          {/* Left Column - Narrow */}
+          <div className="lg:col-span-3 space-y-4">
+            
+            {/* Abilities Card */}
+            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Abilities</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => {
+                  const value = parseInt(stats[ability]) || 10;
+                  const modifier = getModifier(value);
+                  const abilityName = ability === 'constitution' ? 'CON' : 
+                                    ability === 'intelligence' ? 'INT' : 
+                                    ability === 'dexterity' ? 'DEX' : 
+                                    ability === 'charisma' ? 'CHA' : 
+                                    ability === 'strength' ? 'STR' : 
+                                    ability === 'wisdom' ? 'WIS' : ability;
+                  
+                  return (
+                    <div key={ability} className="text-center">
+                      <div className="text-sm font-bold text-[#654321] mb-1">{abilityName}</div>
+                      <div className="text-lg font-bold text-[#654321]">{value}</div>
+                      <div className="text-base font-semibold text-[#8B4513]">
+                        {modifier >= 0 ? '+' : ''}{modifier}
+                      </div>
                     </div>
-                  )}
+                  );
+                })}
+              </div>
+              <button 
+                onClick={() => setActiveTab('skills')}
+                className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+              >
+                View Saves & Skills
+              </button>
+            </div>
+
+            {/* Proficiencies Card */}
+            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Proficiencies</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <div className="font-semibold text-[#654321] mb-1">Armor</div>
+                  <div className="text-[#8B4513]">Light Armor, Medium Armor, Shields</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-[#654321] mb-1">Weapons</div>
+                  <div className="text-[#8B4513]">Simple Weapons, Martial Weapons</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-[#654321] mb-1">Tools</div>
+                  <div className="text-[#8B4513]">Tinker's Tools, Thieves' Tools</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-[#654321] mb-1">Saving Throws</div>
+                  <div className="text-[#8B4513]">Strength & Constitution</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-[#654321] mb-1">Skills</div>
+                  <div className="text-[#8B4513]">Choose two from: Athletics, Intimidation, Survival, Perception</div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="flex-1 space-y-6 text-center lg:text-left">
-                <div>
-                  <div className="flex items-center justify-center lg:justify-start space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-artificerBronze/20 rounded-full flex items-center justify-center">
-                      <span className="text-xl">🐢</span>
-                    </div>
-                    <label className="parchment-text-light font-semibold text-sm uppercase tracking-wide">Character Name</label>
-                  </div>
-                  <input 
-                    type="text" 
-                    value={stats.characterName}
-                    onChange={(e) => setStats({...stats, characterName: e.target.value})}
-                    className="w-full bg-transparent rounded p-3 parchment-text text-2xl lg:text-3xl font-bold focus:outline-none border-b-2 border-artificerBronze/30 focus:border-artificerBronze/60 text-center lg:text-left"
-                    placeholder="Enter your character's name..."
+          {/* Center Column - Wide */}
+          <div className="lg:col-span-6 space-y-4">
+            
+            {/* Combat Summary */}
+            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+              <h3 className="font-bold text-[#654321] mb-4 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Combat Summary</h3>
+              
+              {/* HP Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="font-semibold text-[#654321]">Hit Points</span>
+                  <span className="font-bold text-[#654321]">{stats.HP || 0} / {stats.MaxHP || 0}</span>
+                </div>
+                <div className="w-full bg-[#e8dcc0] rounded-full h-6 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full transition-all duration-300"
+                    style={{ width: `${((stats.HP || 0) / (stats.MaxHP || 1)) * 100}%` }}
                   />
                 </div>
+                {/* HP Action Buttons */}
+                <div className="flex space-x-2 mt-3">
+                  <button
+                    onClick={() => openHpModal("damage")}
+                    className="flex-1 px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                  >
+                    Damage
+                  </button>
+                  <button
+                    onClick={() => openHpModal("heal")}
+                    className="flex-1 px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                  >
+                    Heal
+                  </button>
+                  <button
+                    onClick={() => setMaxHpModalOpen(true)}
+                    className="flex-1 px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                  >
+                    Max HP
+                  </button>
+                </div>
+              </div>
 
-                <div>
-                  <div className="flex items-center justify-center lg:justify-start space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-artificerBronze/20 rounded-full flex items-center justify-center">
-                      <span className="text-xl">⚔️</span>
-                    </div>
-                    <label className="parchment-text-light font-semibold text-sm uppercase tracking-wide">Level</label>
+              {/* Combat Badges */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f5e6d3] border-2 border-[#d4c8a8] rounded-lg mb-2">
+                    <span className="text-lg">🛡️</span>
                   </div>
-                  <div className="flex items-center justify-center lg:justify-start space-x-4">
-                    <button 
-                      onClick={() => {
-                        const newLevel = Math.max(1, stats.level - 1);
-                        const newStats = { ...stats, level: newLevel };
-                        setStats(newStats);
-                        updateCharacterData({ 
-                          stats: newStats,
-                          level: newLevel  // Also update top-level character level
-                        });
-                      }}
-                      className="w-10 h-10 bg-artificerBronze/20 hover:bg-artificerBronze/30 rounded-full flex items-center justify-center parchment-text font-bold button-glow text-lg"
-                    >
-                      -</button>
-                    <div className="text-4xl font-bold parchment-text mx-4">{stats.level}</div>
-                    <button 
-                      onClick={() => {
-                        const newLevel = Math.min(20, stats.level + 1);
-                        const newStats = { ...stats, level: newLevel };
-                        setStats(newStats);
-                        updateCharacterData({ 
-                          stats: newStats,
-                          level: newLevel  // Also update top-level character level
-                        });
-                      }}
-                      className="w-10 h-10 bg-artificerBronze/20 hover:bg-artificerBronze/30 rounded-full flex items-center justify-center parchment-text font-bold button-glow text-lg"
-                    >
-                      +</button>
-                  </div>
-                  <div className="parchment-text-light text-sm mt-3 italic">
-                    {getLevelTitle(stats.level, character?.class)}
+                  <div className="text-xs text-[#8B4513]">AC</div>
+                  <div className="text-base font-bold text-[#654321]">
+                    {(() => {
+                      if (characterClass === 'Barbarian') {
+                        const dexMod = getModifier(parseInt(stats.dexterity) || 10);
+                        const conMod = getModifier(parseInt(stats.constitution) || 10);
+                        return 10 + dexMod + conMod;
+                      }
+                      return stats.armorClass || 10;
+                    })()}
                   </div>
                 </div>
+                
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f5e6d3] border-2 border-[#d4c8a8] rounded-lg mb-2">
+                    <span className="text-lg">⚡</span>
+                  </div>
+                  <div className="text-xs text-[#8B4513]">Initiative</div>
+                  <div className="text-base font-bold text-[#654321]">
+                    {dexMod >= 0 ? '+' : ''}{dexMod}
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f5e6d3] border-2 border-[#d4c8a8] rounded-lg mb-2">
+                    <span className="text-lg">👟</span>
+                  </div>
+                  <div className="text-xs text-[#8B4513]">Speed</div>
+                  <div className="text-base font-bold text-[#654321]">{stats.speed || 30}</div>
+                </div>
+              </div>
+
+              {/* Rage Tracking (Barbarian Only) */}
+              {characterClass === 'Barbarian' && (
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <div className="text-sm font-semibold text-[#654321] mb-2">Rage</div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1">
+                        <input 
+                          type="number" 
+                          placeholder="Current"
+                          className="w-full px-2 py-1 border border-[#d4c8a8] rounded text-sm text-center"
+                          defaultValue="0"
+                        />
+                      </div>
+                      <span className="text-[#8B4513]">/</span>
+                      <div className="flex-1">
+                        <input 
+                          type="number" 
+                          placeholder="Total"
+                          className="w-full px-2 py-1 border border-[#d4c8a8] rounded text-sm text-center"
+                          defaultValue={Math.floor(stats.level / 2) + 2}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-[#654321] mb-2">Rage Damage</div>
+                    <input 
+                      type="number" 
+                      placeholder="+2"
+                      className="w-full px-2 py-1 border border-[#d4c8a8] rounded text-sm text-center"
+                      defaultValue="2"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Death Saving Throws - Show when HP is 0 */}
+              {(Number(stats.HP) || 0) === 0 && (
+                <div className="mt-4">
+                  <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Death Saving Throws</h3>
+                  <DeathSavingThrows characterDataPrefix={characterDataPrefix} />
+                </div>
+              )}
+
+              {/* Temp HP */}
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="font-semibold text-[#654321]">Temp HP</span>
+                  <input 
+                    type="number" 
+                    placeholder="0"
+                    className="w-20 px-2 py-1 border border-[#d4c8a8] rounded text-sm text-center"
+                    defaultValue={stats.tempHP || 0}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Simplified Attacks Block */}
+            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Attacks</h3>
+              <div className="space-y-3 mb-4">
+                {/* Three key weapons */}
+                {(() => {
+                  if (characterClass === 'Barbarian') {
+                    return (
+                      <>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Greataxe</div>
+                            <div className="text-sm text-[#8B4513]">+{strMod} | 2d12 + 3</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">2d12 + 3</div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Javelin</div>
+                            <div className="text-sm text-[#8B4513]">+{strMod} | 1d6 + 1</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1d6 + 1</div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Unarmed Strike</div>
+                            <div className="text-sm text-[#8B4513]">+{strMod} | 1 + {strMod}</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1 + {strMod}</div>
+                        </div>
+                      </>
+                    );
+                  } else if (characterClass === 'Artificer') {
+                    return (
+                      <>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Light Hammer</div>
+                            <div className="text-sm text-[#8B4513]">+{strMod} | 1d4 + 1</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1d4 + 1</div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Crossbow</div>
+                            <div className="text-sm text-[#8B4513]">+{dexMod} | 1d8</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1d8</div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Dagger</div>
+                            <div className="text-sm text-[#8B4513]">+{dexMod} | 1d4</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1d4</div>
+                        </div>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Longsword</div>
+                            <div className="text-sm text-[#8B4513]">+{strMod} | 1d8 + 1</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1d8 + 1</div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Shortsword</div>
+                            <div className="text-sm text-[#8B4513]">+{strMod} | 1d6</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1d6</div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[#654321]">Dagger</div>
+                            <div className="text-sm text-[#8B4513]">+{dexMod} | 1d4</div>
+                          </div>
+                          <div className="text-sm font-bold text-[#654321]">1d4</div>
+                        </div>
+                      </>
+                    );
+                  }
+                })()}
+              </div>
+              <button 
+                onClick={() => setActiveTab('actions')}
+                className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+              >
+                View All Attacks
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column - Narrow */}
+          <div className="lg:col-span-3 space-y-4">
+            
+            {/* Quick Actions Block */}
+            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Quick Actions</h3>
+              <div className="space-y-2 mb-4">
+                {(() => {
+                  if (characterClass === 'Barbarian') {
+                    return (
+                      <>
+                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                          <span className="text-lg">⚔️</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-[#654321]">Rage</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                          <span className="text-lg">🛡️</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-[#654321]">Unarmored Defense</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                          <span className="text-lg">⚡</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-[#654321]">Reckless Attack</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                          <span className="text-lg">👁️</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-[#654321]">Danger Sense</div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  } else if (characterClass === 'Artificer') {
+                    return (
+                      <>
+                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                          <span className="text-lg">🔧</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-[#654321]">Infuse Item</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                          <span className="text-lg">⚡</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-[#654321]">Flash of Genius</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
+                          <span className="text-lg">🛡️</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-[#654321]">Shield</div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <div className="text-sm text-[#8B4513] text-center py-4">No quick actions available</div>
+                    );
+                  }
+                })()}
+              </div>
+              <button 
+                onClick={() => setActiveTab('actions')}
+                className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+              >
+                Manage Actions
+              </button>
+            </div>
+
+            {/* Conditions Block */}
+            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Conditions</h3>
+              <div className="space-y-2">
+                {activeConditions.length > 0 ? (
+                  activeConditions.map((condition, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321]">{condition}</div>
+                        <div className="text-xs text-[#8B4513]">Duration: 1 minute</div>
+                      </div>
+                      <button
+                        onClick={() => setActiveConditions(prev => 
+                          prev.filter(c => c !== condition)
+                        )}
+                        className="text-[#8B4513] hover:text-[#654321] text-sm font-bold ml-2"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-[#8B4513] text-center py-4">No active conditions</div>
+                )}
               </div>
             </div>
           </div>
-        </Card.Content>
-      </Card>
+        </div>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-center mb-6" style={{
-          fontFamily: 'Cinzel, serif',
-          color: '#3C2415',
-          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.3)',
-          letterSpacing: '0.05em'
-        }}>ABILITY SCORES</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 justify-items-center">
-          {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => (
-            <div 
-              key={ability}
-              className="relative text-center cursor-pointer hover:scale-105 transition-all duration-200"
-              style={{
-                backgroundImage: 'url(/ability-container.png)',
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                width: '140px',
-                height: '140px'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log(`CLICKED ON ${ability}!`);
-                const currentValue = parseInt(stats[ability]) || 10;
-                console.log(`Current ${ability} value:`, currentValue, 'Full stats object:', stats);
-                const input = prompt(`Enter new value for ${ability}:`, currentValue.toString());
-                console.log(`User input for ${ability}:`, input);
-                if (input !== null && input.trim() !== '') {
-                  const newValue = parseInt(input);
-                  console.log(`Parsed new value for ${ability}:`, newValue);
-                  if (!isNaN(newValue) && newValue >= 0 && newValue <= 30) {
-                    console.log(`Updating ${ability} from ${currentValue} to ${newValue}`);
-                    const newStats = {
-                      ...stats,
-                      [ability]: newValue
-                    };
-                    console.log('New stats object:', newStats);
-                    setStats(newStats);
-                    console.log('setStats called!');
-                    // Manually update character data to avoid infinite loop
-                    updateCharacterData({ stats: newStats });
-                    console.log('updateCharacterData called!');
-                  } else {
-                    alert('Please enter a valid number between 0 and 30');
-                  }
-                }
-              }}
-            >
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                <div className="text-sm font-bold leading-tight mb-2" style={{ color: '#3C2415' }}>
-                  {ability === 'constitution' ? 'CON' : 
-                   ability === 'intelligence' ? 'INT' : 
-                   ability === 'dexterity' ? 'DEX' : 
-                   ability === 'charisma' ? 'CHA' : 
-                   ability === 'strength' ? 'STR' : 
-                   ability === 'wisdom' ? 'WIS' : ability}
-                </div>
-                <div className="text-3xl font-bold mb-2" style={{ color: '#3C2415' }}>
-                  {(() => {
-                    const value = parseInt(stats[ability]);
-                    return isNaN(value) ? 10 : value;
-                  })()}
-                </div>
-                <div className="text-lg font-semibold" style={{ color: '#3C2415' }}>
-                  {(() => {
-                    const value = parseInt(stats[ability]);
-                    const cleanValue = isNaN(value) ? 10 : value;
-                    const mod = getModifier(cleanValue);
-                    return mod >= 0 ? '+' : '' + mod;
-                  })()}
-                </div>
-              </div>
-            </div>
-            ))}
+        {/* Bottom Row - Full Width Features & Traits */}
+        <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+          <h3 className="font-bold text-[#654321] mb-4 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Features & Traits</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            {(() => {
+              if (characterClass === 'Barbarian') {
+                return (
+                  <>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">⚔️</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Rage</div>
+                        <div className="text-xs text-[#8B4513]">While raging, you gain advantage on Strength checks and saving throws, plus resistance to bludgeoning, piercing, and slashing damage.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">🛡️</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Unarmored Defense</div>
+                        <div className="text-xs text-[#8B4513]">Your AC equals 10 + your Dexterity modifier + your Constitution modifier when not wearing armor.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">⚡</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Reckless Attack</div>
+                        <div className="text-xs text-[#8B4513]">You can choose to attack recklessly, gaining advantage on the attack roll but giving enemies advantage on attacks against you.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">👁️</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Danger Sense</div>
+                        <div className="text-xs text-[#8B4513]">You have advantage on Dexterity saving throws against effects that you can see, such as traps and spells.</div>
+                      </div>
+                    </div>
+                  </>
+                );
+              } else if (characterClass === 'Artificer') {
+                return (
+                  <>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">🔧</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Magical Tinkering</div>
+                        <div className="text-xs text-[#8B4513]">You can cast the Mending cantrip at will and can detect magic within 10 feet.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">⚡</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Flash of Genius</div>
+                        <div className="text-xs text-[#8B4513]">You can create a flash of mental energy that forces creatures to make an Intelligence save or be stunned.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">🛡️</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Infuse Item</div>
+                        <div className="text-xs text-[#8B4513]">You can infuse nonmagical items with magical properties, creating temporary magic items.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <span className="text-2xl">🎯</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#654321] mb-1">Spellcasting</div>
+                        <div className="text-xs text-[#8B4513]">You can cast spells from the Artificer spell list, preparing a number of spells equal to your Intelligence modifier.</div>
+                      </div>
+                    </div>
+                  </>
+                );
+              } else {
+                return (
+                  <div className="col-span-4 text-sm text-[#8B4513] text-center py-4">
+                    No class features available
+                  </div>
+                );
+              }
+            })()}
+          </div>
+          <button 
+            onClick={() => setActiveTab('features')}
+            className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+          >
+            View All Features
+          </button>
         </div>
       </div>
-      
-      {/* Extra spacing at bottom for ability scores */}
-      <div className="h-16"></div>
-    </div>
-  );
+    );
+  };
 
   const renderNotesTab = () => (
     <EnhancedNotes characterDataPrefix={characterDataPrefix} />
@@ -1089,63 +1304,93 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
         boxShadow: 'inset 0 0 50px rgba(139, 69, 19, 0.3), 0 0 30px rgba(0, 0, 0, 0.5)'
       }}>
 
-      {/* Main content */}
-      <div className="max-w-3xl mx-auto p-12 pt-32 pb-32">
+      {/* Full-width page layout */}
+      <div className="w-full min-h-screen bg-[#fdf6e8]">
         
-        {/* Back to Dashboard Button */}
-        <div className="mb-6">
-          <button
-            onClick={onBackToDashboard}
-            className="px-4 py-2 bg-artificerBronze/80 hover:bg-artificerBronze text-white rounded font-semibold transition-all flex items-center gap-2"
-          >
-            ← Back to Dashboard
-          </button>
-        </div>
-        
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{
-            fontFamily: 'Cinzel, serif',
-            color: '#3C2415',
-            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-            letterSpacing: '0.1em',
-            margin: '2rem 0'
-          }}>CHARACTER SHEET</h1>
-        </div>
-        
-        {/* Ornate Tab Navigation */}
-        <div className="flex justify-center gap-2 mb-8 flex-wrap">
-          {tabs.map((tab) => (
+        {/* Compact Header Bar */}
+        <div className="w-full bg-[#fdf6e8] border-b border-[#d4c8a8] px-4 py-3">
+          <div className="flex items-center justify-between w-full">
+            
+            {/* Left: Back Button */}
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg font-semibold text-sm uppercase tracking-wide transition-all duration-300 ${
-                activeTab === tab.id
-                  ? 'text-amber-100 shadow-inner'
-                  : 'text-amber-100 hover:bg-amber-700/30'
-              }`}
-              style={{
-                background: activeTab === tab.id 
-                  ? 'linear-gradient(135deg, #CD853F 0%, #DAA520 50%, #CD853F 100%)'
-                  : 'linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #8B4513 100%)',
-                border: '2px solid #654321',
-                boxShadow: activeTab === tab.id
-                  ? 'inset 0 3px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)'
-                  : '0 3px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)',
-                fontFamily: 'Cinzel, serif'
-              }}
+              onClick={onBackToDashboard}
+              className="px-3 py-1 text-[#654321] hover:text-[#8B4513] font-medium transition-colors flex items-center gap-2"
             >
-              {tab.label}
+              ← Back to Dashboard
             </button>
-          ))}
+
+            {/* Center: Character Info */}
+            <div className="flex items-center space-x-4 flex-1 justify-center">
+              {/* Portrait Thumbnail */}
+              <div className="w-12 h-12 rounded overflow-hidden border border-[#d4c8a8] bg-[#f5e6d3] flex items-center justify-center flex-shrink-0">
+                {character?.portrait ? (
+                  <img 
+                    src={character.portrait} 
+                    alt={`${character.name} Portrait`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-lg">👤</div>
+                )}
+              </div>
+              
+              {/* Character Name and Details */}
+              <div className="text-center">
+                <input 
+                  type="text" 
+                  value={stats.characterName}
+                  onChange={(e) => {
+                    const newStats = { ...stats, characterName: e.target.value };
+                    setStats(newStats);
+                    updateCharacterData({ stats: newStats });
+                  }}
+                  className="bg-transparent border-b border-[#d4c8a8] focus:border-[#8B4513] text-2xl font-bold text-[#654321] focus:outline-none px-1 py-0.5 text-center"
+                  placeholder="Character Name"
+                  style={{ fontFamily: 'Cinzel, serif' }}
+                />
+                <div className="text-sm text-[#654321] mt-1">
+                  {character?.class} • Level {stats.level} • {character?.race || 'Race not specified'}
+                </div>
+                <div className="text-xs text-[#8B4513] italic">
+                  {getLevelTitle(stats.level, character?.class)}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Rest Buttons */}
+            <div className="flex items-center space-x-2">
+              <button className="px-3 py-1 bg-[#8B4513] hover:bg-[#654321] text-white text-sm font-medium transition-colors">
+                Short Rest
+              </button>
+              <button className="px-3 py-1 bg-[#654321] hover:bg-[#8B4513] text-white text-sm font-medium transition-colors">
+                Long Rest
+              </button>
+            </div>
+          </div>
         </div>
-        {/* Simple ornate divider */}
-        <div className="text-center my-8">
-          <div className="w-full h-px" style={{ 
-            background: 'linear-gradient(to right, transparent 0%, #8B4513 20%, #8B4513 80%, transparent 100%)' 
-          }}></div>
+
+        {/* Full-width Tab Bar */}
+        <div className="w-full bg-[#f5e6d3] border-b border-[#d4c8a8] px-4">
+          <div className="flex space-x-6 overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
+                  activeTab === tab.id
+                    ? 'text-[#654321] border-[#8B4513]'
+                    : 'text-[#8B4513] border-transparent hover:text-[#654321]'
+                }`}
+                style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
         
-        <div className="mt-6">
+        {/* Three-column content area */}
+        <div className="p-6">
           {renderTabContent()}
         </div>
       </div>
