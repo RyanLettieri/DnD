@@ -428,39 +428,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
             
             {/* Abilities Card */}
             <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-bold text-[#654321] text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Abilities</h3>
-                <div className="flex items-center space-x-2">
-                  <div className="text-sm font-semibold text-[#654321]">Level</div>
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={() => {
-                        const newLevel = Math.max(1, stats.level - 1);
-                        const newStats = { ...stats, level: newLevel };
-                        setStats(newStats);
-                        updateCharacterData({ 
-                          stats: newStats,
-                          level: newLevel
-                        });
-                      }}
-                      className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
-                    >−</button>
-                    <span className="font-bold text-[#654321] px-2 text-sm">{stats.level}</span>
-                    <button 
-                      onClick={() => {
-                        const newLevel = Math.min(20, stats.level + 1);
-                        const newStats = { ...stats, level: newLevel };
-                        setStats(newStats);
-                        updateCharacterData({ 
-                          stats: newStats,
-                          level: newLevel
-                        });
-                      }}
-                      className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
-                    >+</button>
-                  </div>
-                </div>
-              </div>
+              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Abilities</h3>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => {
                   const value = parseInt(stats[ability]) || 10;
@@ -472,8 +440,18 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                                     ability === 'strength' ? 'STR' : 
                                     ability === 'wisdom' ? 'WIS' : ability;
                   
+                  const abilityIcons = {
+                    strength: '💪',
+                    dexterity: '🤸',
+                    constitution: '🛡️',
+                    intelligence: '🧠',
+                    wisdom: '👁️',
+                    charisma: '🗣️'
+                  };
+                  
                   return (
                     <div key={ability} className="text-center">
+                      <div className="text-lg mb-1">{abilityIcons[ability]}</div>
                       <div className="text-sm font-bold text-[#654321] mb-1">{abilityName}</div>
                       <div className="text-lg font-bold text-[#654321]">{value}</div>
                       <div className="text-base font-semibold text-[#8B4513]">
@@ -523,40 +501,89 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
           <div className="lg:col-span-6 space-y-4">
             
             {/* Combat Summary */}
-            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-4 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Combat Summary</h3>
+            <div className="bg-gradient-to-br from-[#fdf6e8] to-[#f5e6d3] border border-[#d4c8a8] rounded-2xl p-6 shadow-lg">
+              <h3 className="font-bold text-[#654321] mb-6 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Combat Summary</h3>
               
-              {/* HP Bar */}
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-semibold text-[#654321]">Hit Points</span>
-                  <span className="font-bold text-[#654321]">{stats.HP || 0} / {stats.MaxHP || 0}</span>
+              {/* Modern 2-Column Layout */}
+              <div className="flex items-center justify-between gap-8 mb-8">
+                {/* Left: Circular HP Meter */}
+                <div className="flex-shrink-0">
+                  <div className="relative w-44 h-44">
+                    {/* HP Ring SVG */}
+                    <svg className="w-full h-full" viewBox="0 0 176 176">
+                      {/* Background ring */}
+                      <circle
+                        cx="88"
+                        cy="88"
+                        r="70"
+                        stroke="#d4c8a8"
+                        strokeWidth="14"
+                        fill="none"
+                      />
+                      {/* HP fill ring */}
+                      <defs>
+                        <linearGradient id="hpGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#22c55e" />
+                          <stop offset="50%" stopColor="#16a34a" />
+                          <stop offset="100%" stopColor="#15803d" />
+                        </linearGradient>
+                      </defs>
+                      <circle
+                        cx="88"
+                        cy="88"
+                        r="70"
+                        stroke="url(#hpGradient)"
+                        strokeWidth="14"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 70}`}
+                        strokeDashoffset={`${2 * Math.PI * 70 * (1 - (Math.min(100, Math.max(0, ((Number(stats.HP) || 0) / (Number(stats.MaxHP) || 1)) * 100)) / 100))}`}
+                        className="transition-all duration-500 ease-out"
+                        style={{
+                          filter: (Number(stats.HP) || 0) < (Number(stats.MaxHP) || 1) * 0.25 ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : 'none'
+                        }}
+                        transform="rotate(-90 88 88)"
+                      />
+                    </svg>
+                    
+                    {/* HP Text Overlay */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="text-3xl font-bold text-[#654321] leading-none">
+                        {Number(stats.HP) || 0}
+                      </div>
+                      <div className="text-sm text-[#8B4513] leading-none mt-1">
+                        / {Number(stats.MaxHP) || 1}
+                      </div>
+                    </div>
+                    
+                    {/* Low HP Pulse Animation */}
+                    {(Number(stats.HP) || 0) < (Number(stats.MaxHP) || 1) * 0.25 && (
+                      <div className="absolute inset-4 rounded-full border-2 border-red-400 animate-pulse opacity-50" />
+                    )}
+                  </div>
                 </div>
-                <div className="w-full bg-[#e8dcc0] rounded-full h-6 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full transition-all duration-300"
-                    style={{ width: `${((stats.HP || 0) / (stats.MaxHP || 1)) * 100}%` }}
-                  />
-                </div>
-                {/* HP Action Buttons */}
-                <div className="flex space-x-2 mt-3">
+                
+                {/* Right: Vertical Action Buttons */}
+                <div className="flex flex-col gap-3 flex-1 max-w-xs">
                   <button
                     onClick={() => openHpModal("damage")}
-                    className="flex-1 px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 bg-[#8B4513] hover:bg-[#654321] text-white rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md"
                   >
-                    Damage
+                    <span className="text-lg">⚔️</span>
+                    <span>Damage</span>
                   </button>
                   <button
                     onClick={() => openHpModal("heal")}
-                    className="flex-1 px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 bg-[#8B4513] hover:bg-[#654321] text-white rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md"
                   >
-                    Heal
+                    <span className="text-lg">💚</span>
+                    <span>Heal</span>
                   </button>
                   <button
                     onClick={() => setMaxHpModalOpen(true)}
-                    className="flex-1 px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 bg-[#8B4513] hover:bg-[#654321] text-white rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md"
                   >
-                    Max HP
+                    <span className="text-lg">🛡️</span>
+                    <span>Max HP</span>
                   </button>
                 </div>
               </div>
@@ -1669,6 +1696,34 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
 
             {/* Right: Rest Buttons */}
             <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 mr-3">
+                <span className="text-sm font-semibold text-[#654321] mr-1">Level</span>
+                <button 
+                  onClick={() => {
+                    const newLevel = Math.max(1, stats.level - 1);
+                    const newStats = { ...stats, level: newLevel };
+                    setStats(newStats);
+                    updateCharacterData({ 
+                      stats: newStats,
+                      level: newLevel
+                    });
+                  }}
+                  className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
+                >−</button>
+                <span className="font-bold text-[#654321] px-2 text-sm">{stats.level}</span>
+                <button 
+                  onClick={() => {
+                    const newLevel = Math.min(20, stats.level + 1);
+                    const newStats = { ...stats, level: newLevel };
+                    setStats(newStats);
+                    updateCharacterData({ 
+                      stats: newStats,
+                      level: newLevel
+                    });
+                  }}
+                  className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
+                >+</button>
+              </div>
               <button className="px-3 py-1 bg-[#8B4513] hover:bg-[#654321] text-white text-sm font-medium transition-colors">
                 Short Rest
               </button>
