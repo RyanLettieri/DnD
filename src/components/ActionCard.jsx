@@ -1,16 +1,14 @@
 import React from 'react';
 
 const ActionCard = ({ title, description, type }) => (
-  <div className={`parchment-card p-4 rounded hover:shadow-lg transition-all cursor-pointer ${
-    type === 'bonus' ? 'border-l-4 border-artificerBronze' : ''
-  }`}>
+  <div className={`sheet-row-card action-sheet-card ${type === 'bonus' || type === 'bonus_action' ? 'is-bonus-action' : ''}`}>
     <div className="flex justify-between items-center mb-2">
-      <h3 className="parchment-text font-bold">{title}</h3>
-      <span className="parchment-text-light text-sm">
-        {type === 'bonus' ? 'Bonus Action' : 'Action'}
+      <h3 className="sheet-row-title">{title}</h3>
+      <span className="sheet-row-pill">
+        {type === 'bonus' || type === 'bonus_action' ? 'Bonus Action' : 'Action'}
       </span>
     </div>
-    <p className="parchment-text-light">{description}</p>
+    <p className="sheet-row-body">{description}</p>
   </div>
 );
 

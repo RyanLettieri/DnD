@@ -87,19 +87,19 @@ const QuickActions = ({ stats, proficiencies, savingThrowProficiencies, getModif
   };
 
   return (
-    <Card>
+    <Card className="tab-actions-panel">
       <Card.Header>Quick Actions</Card.Header>
       <Card.Content>
         <div className="space-y-4">
           {quickActions.map((section, index) => (
             <div key={index}>
-              <h3 className="text-amber-900 font-semibold mb-2 text-lg">{section.category}</h3>
+              <h3 className="tab-section-title">{section.category}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {section.actions.map((action, actionIndex) => (
                   <button
                     key={actionIndex}
                     onClick={() => handleActionClick(action)}
-                    className="w-full min-h-[44px] bg-amber-100/90 hover:bg-amber-200/90 border border-amber-800/80 rounded-md transition-all duration-200 shadow-sm hover:shadow"
+                    className="quick-roll-button"
                   >
                     <div className="flex items-center justify-between gap-3 px-3 py-2">
                       <div className="text-amber-900 font-semibold text-sm truncate">{action.name}</div>

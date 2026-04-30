@@ -1,0 +1,199 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080">
+  <defs>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#3b1f10" flood-opacity="0.16"/>
+    </filter>
+    <filter id="smallShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#3b1f10" flood-opacity="0.12"/>
+    </filter>
+    <radialGradient id="hpGlow" cx="50%" cy="45%" r="58%">
+      <stop offset="0%" stop-color="#fff8e8"/>
+      <stop offset="68%" stop-color="#f6e8c8"/>
+      <stop offset="100%" stop-color="#e8d2a6"/>
+    </radialGradient>
+    <linearGradient id="headerGrad" x1="0" x2="1">
+      <stop offset="0%" stop-color="#5c2a12"/>
+      <stop offset="52%" stop-color="#8c4518"/>
+      <stop offset="100%" stop-color="#4c2410"/>
+    </linearGradient>
+    <pattern id="paperGrain" width="64" height="64" patternUnits="userSpaceOnUse">
+      <rect width="64" height="64" fill="#f5ead5"/>
+      <circle cx="10" cy="14" r="1" fill="#d8bf95" opacity=".25"/>
+      <circle cx="40" cy="8" r="1.2" fill="#b78d5e" opacity=".15"/>
+      <circle cx="28" cy="46" r=".9" fill="#8d5a31" opacity=".12"/>
+      <circle cx="56" cy="36" r="1.1" fill="#d8bf95" opacity=".2"/>
+    </pattern>
+    <style>
+      .title{font-family:Georgia,serif;font-size:33px;font-weight:700;fill:#fff4dc;letter-spacing:.5px}
+      .serif{font-family:Georgia,serif;fill:#4a220d}
+      .small{font-family:Georgia,serif;font-size:15px;fill:#7c3a16}
+      .label{font-family:Georgia,serif;font-size:13px;fill:#8c4518;text-transform:uppercase}
+      .body{font-family:Arial, sans-serif;font-size:15px;fill:#4f2a14}
+      .panelTitle{font-family:Georgia,serif;font-size:20px;font-weight:700;fill:#4a220d}
+      .buttonText{font-family:Georgia,serif;font-size:15px;font-weight:700;fill:#fff4dc}
+      .muted{fill:#9a734a}
+    </style>
+  </defs>
+
+  <rect width="1440" height="1080" fill="#3f2112"/>
+  <rect x="18" y="18" width="1404" height="1044" rx="18" fill="url(#paperGrain)"/>
+  <rect x="32" y="32" width="1376" height="1016" rx="13" fill="none" stroke="#c39a62" stroke-width="2" opacity=".55"/>
+
+  <rect x="56" y="44" width="1328" height="152" rx="16" fill="url(#headerGrad)" filter="url(#softShadow)"/>
+  <circle cx="176" cy="120" r="62" fill="#dfb36d" stroke="#f7e6be" stroke-width="5"/>
+  <circle cx="176" cy="120" r="52" fill="#a8b96a"/>
+  <path d="M135 143 C154 92 196 76 218 112 C205 164 162 172 135 143Z" fill="#6f8f37"/>
+  <circle cx="162" cy="109" r="6" fill="#24350e"/>
+  <path d="M198 88 C218 65 243 72 245 101 C233 91 216 87 198 88Z" fill="#ff9f28"/>
+  <path d="M205 84 C226 43 264 67 252 107 C245 88 228 80 205 84Z" fill="#ff6a20" opacity=".85"/>
+  <text x="270" y="93" class="title">IniTuga</text>
+  <text x="270" y="124" class="small" fill="#ffe5bd">Artificer  •  Level 4  •  Tortle</text>
+  <text x="270" y="151" class="small" fill="#edc48d">Skilled Artificer</text>
+  <text x="78" y="122" class="small" fill="#ffe5bd">← Back to dashboard</text>
+  <text x="1025" y="94" class="label" fill="#ffe5bd">Level</text>
+  <rect x="1080" y="70" width="34" height="34" rx="9" fill="#f6e4c1" opacity=".95"/>
+  <text x="1092" y="93" class="body" fill="#4a220d">−</text>
+  <text x="1132" y="93" class="body" fill="#fff4dc" font-weight="700">4</text>
+  <rect x="1160" y="70" width="34" height="34" rx="9" fill="#f6e4c1" opacity=".95"/>
+  <text x="1171" y="93" class="body" fill="#4a220d">+</text>
+  <rect x="1220" y="68" width="86" height="38" rx="19" fill="#fff1d4"/>
+  <text x="1236" y="92" class="label" fill="#5c2a12">Short rest</text>
+  <rect x="1316" y="68" width="82" height="38" rx="19" fill="#fff1d4"/>
+  <text x="1332" y="92" class="label" fill="#5c2a12">Long rest</text>
+
+  <g transform="translate(74 214)">
+    <text x="0" y="0" class="label">Character</text>
+    <text x="142" y="0" class="label" opacity=".7">Background</text>
+    <text x="298" y="0" class="label" opacity=".7">Combat</text>
+    <text x="415" y="0" class="label" opacity=".7">Actions</text>
+    <text x="530" y="0" class="label" opacity=".7">Spells</text>
+    <text x="632" y="0" class="label" opacity=".7">Infusions</text>
+    <text x="754" y="0" class="label" opacity=".7">Skills</text>
+    <text x="856" y="0" class="label" opacity=".7">Inventory</text>
+    <text x="988" y="0" class="label" opacity=".7">Features</text>
+    <path d="M0 18 H94" stroke="#9b4819" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(64 252)">
+    <rect width="304" height="335" rx="20" fill="#fff6e5" opacity=".72" filter="url(#smallShadow)"/>
+    <text x="24" y="38" class="panelTitle">Abilities</text>
+    <g transform="translate(28 66)">
+      <g>
+        <circle cx="40" cy="42" r="38" fill="#f3dfb8"/>
+        <text x="26" y="36" class="label">STR</text><text x="28" y="62" class="serif" font-size="25" font-weight="700">14</text><text x="33" y="83" class="small">+2</text>
+      </g>
+      <g transform="translate(104 0)">
+        <circle cx="40" cy="42" r="38" fill="#f3dfb8"/>
+        <text x="26" y="36" class="label">DEX</text><text x="28" y="62" class="serif" font-size="25" font-weight="700">12</text><text x="33" y="83" class="small">+1</text>
+      </g>
+      <g transform="translate(208 0)">
+        <circle cx="40" cy="42" r="38" fill="#f3dfb8"/>
+        <text x="26" y="36" class="label">CON</text><text x="28" y="62" class="serif" font-size="25" font-weight="700">16</text><text x="33" y="83" class="small">+3</text>
+      </g>
+      <g transform="translate(0 108)">
+        <circle cx="40" cy="42" r="38" fill="#f3dfb8"/>
+        <text x="28" y="36" class="label">INT</text><text x="28" y="62" class="serif" font-size="25" font-weight="700">20</text><text x="33" y="83" class="small">+5</text>
+      </g>
+      <g transform="translate(104 108)">
+        <circle cx="40" cy="42" r="38" fill="#f3dfb8"/>
+        <text x="26" y="36" class="label">WIS</text><text x="28" y="62" class="serif" font-size="25" font-weight="700">17</text><text x="33" y="83" class="small">+3</text>
+      </g>
+      <g transform="translate(208 108)">
+        <circle cx="40" cy="42" r="38" fill="#f3dfb8"/>
+        <text x="26" y="36" class="label">CHA</text><text x="28" y="62" class="serif" font-size="25" font-weight="700">18</text><text x="33" y="83" class="small">+4</text>
+      </g>
+    </g>
+    <rect x="24" y="279" width="256" height="40" rx="20" fill="#944614"/>
+    <text x="88" y="304" class="buttonText">View Saves &amp; Skills</text>
+  </g>
+
+  <g transform="translate(396 252)">
+    <rect width="600" height="388" rx="24" fill="#fff6e5" opacity=".78" filter="url(#softShadow)"/>
+    <text x="28" y="42" class="panelTitle">Combat Summary</text>
+    <circle cx="158" cy="196" r="90" fill="#e0c791"/>
+    <circle cx="158" cy="196" r="78" fill="url(#hpGlow)"/>
+    <path d="M158 106 A90 90 0 0 1 209 122" fill="none" stroke="#1ea86b" stroke-width="13"/>
+    <path d="M209 122 A90 90 0 1 1 158 106" fill="none" stroke="#db816f" stroke-width="7" opacity=".7"/>
+    <text x="142" y="194" class="serif" font-size="42" font-weight="700">1</text>
+    <text x="140" y="224" class="small">/ 35 HP</text>
+    <g transform="translate(318 90)">
+      <rect width="226" height="54" rx="27" fill="#944614"/>
+      <text x="28" y="34" class="buttonText">⚔ Damage</text>
+      <rect y="72" width="226" height="54" rx="27" fill="#2f8e66"/>
+      <text x="28" y="106" class="buttonText">♥ Heal</text>
+      <rect y="144" width="226" height="54" rx="27" fill="#5e6ca8"/>
+      <text x="28" y="178" class="buttonText">◆ Max HP</text>
+    </g>
+    <g transform="translate(70 304)">
+      <text x="0" y="0" class="label">AC</text><text x="0" y="27" class="serif" font-size="25" font-weight="700">17</text>
+      <text x="182" y="0" class="label">Initiative</text><text x="203" y="27" class="serif" font-size="25" font-weight="700">+1</text>
+      <text x="402" y="0" class="label">Speed</text><text x="407" y="27" class="serif" font-size="25" font-weight="700">30</text>
+    </g>
+  </g>
+
+  <g transform="translate(1030 252)">
+    <rect width="330" height="388" rx="20" fill="#fff6e5" opacity=".74" filter="url(#smallShadow)"/>
+    <text x="24" y="38" class="panelTitle">Quick Actions</text>
+    <g transform="translate(24 66)">
+      <rect width="282" height="46" rx="23" fill="#f0dfbf"/>
+      <text x="22" y="29" class="body">🔧 Infuse Item</text>
+      <rect y="58" width="282" height="46" rx="23" fill="#f0dfbf"/>
+      <text x="22" y="87" class="body">🛡 Shield</text>
+      <rect y="116" width="282" height="58" rx="16" fill="#f0dfbf"/>
+      <text x="22" y="141" class="body">⚙ Eldritch Cannon</text><text x="230" y="141" class="small" fill="#b94b31">Remove</text>
+      <rect y="186" width="282" height="58" rx="16" fill="#f0dfbf"/>
+      <text x="22" y="211" class="body">⚙ Firebolt Cantrip</text><text x="230" y="211" class="small" fill="#b94b31">Remove</text>
+      <rect y="262" width="210" height="40" rx="20" fill="#fffaf0" stroke="#dcc39b"/>
+      <text x="18" y="287" class="small" opacity=".65">Add custom quick act</text>
+      <rect x="220" y="262" width="62" height="40" rx="20" fill="#944614"/>
+      <text x="237" y="287" class="buttonText">Add</text>
+    </g>
+  </g>
+
+  <g transform="translate(64 616)">
+    <rect width="304" height="310" rx="20" fill="#fff6e5" opacity=".72" filter="url(#smallShadow)"/>
+    <text x="24" y="40" class="panelTitle">Proficiencies</text>
+    <text x="24" y="82" class="label">Armor</text><text x="24" y="108" class="body">Light, medium, shields</text>
+    <text x="24" y="150" class="label">Weapons</text><text x="24" y="176" class="body">Simple, martial</text>
+    <text x="24" y="218" class="label">Tools</text><text x="24" y="244" class="body">Tinker's, thieves' tools</text>
+    <text x="24" y="286" class="label">Saving Throws</text><text x="144" y="286" class="body">STR &amp; CON</text>
+  </g>
+
+  <g transform="translate(396 672)">
+    <rect width="600" height="298" rx="20" fill="#fff6e5" opacity=".74" filter="url(#smallShadow)"/>
+    <text x="24" y="40" class="panelTitle">Spells &amp; Cantrips</text>
+    <g transform="translate(24 66)">
+      <path d="M0 48 H552" stroke="#ddc59e"/>
+      <text x="0" y="26" class="body" font-weight="700">✨ Fire Bolt</text><text x="0" y="48" class="small">Cantrip</text><text x="464" y="35" class="label">1d10 Fire</text>
+      <path d="M0 104 H552" stroke="#ddc59e"/>
+      <text x="0" y="82" class="body" font-weight="700">🔮 Grease</text><text x="0" y="104" class="small">Level 1</text><text x="520" y="91" class="label">—</text>
+      <path d="M0 160 H552" stroke="#ddc59e"/>
+      <text x="0" y="138" class="body" font-weight="700">🔮 Fog Cloud</text><text x="0" y="160" class="small">Level 1</text><text x="520" y="147" class="label">—</text>
+      <path d="M0 216 H552" stroke="#ddc59e"/>
+      <text x="0" y="194" class="body" font-weight="700">🔮 Thunderwave</text><text x="0" y="216" class="small">Level 1</text><text x="435" y="203" class="label">2d8 Thunder</text>
+    </g>
+    <rect x="24" y="238" width="552" height="42" rx="21" fill="#944614"/>
+    <text x="246" y="264" class="buttonText">View All Spells</text>
+  </g>
+
+  <g transform="translate(1030 672)">
+    <rect width="330" height="210" rx="20" fill="#fff6e5" opacity=".74" filter="url(#smallShadow)"/>
+    <text x="24" y="40" class="panelTitle">Conditions</text>
+    <rect x="24" y="66" width="220" height="40" rx="20" fill="#fffaf0" stroke="#dcc39b"/>
+    <text x="42" y="91" class="small" opacity=".65">Enter condition name</text>
+    <rect x="252" y="66" width="54" height="40" rx="20" fill="#944614"/>
+    <text x="267" y="91" class="buttonText">Add</text>
+    <text x="92" y="154" class="small">No active conditions</text>
+  </g>
+
+  <g transform="translate(64 948)">
+    <rect width="1296" height="88" rx="20" fill="#fff6e5" opacity=".72" filter="url(#smallShadow)"/>
+    <text x="24" y="36" class="panelTitle">Features &amp; Traits</text>
+    <text x="24" y="66" class="body">Magical Tinkering</text>
+    <text x="298" y="66" class="body">Flash of Genius</text>
+    <text x="554" y="66" class="body">Infuse Item</text>
+    <text x="792" y="66" class="body">Spellcasting</text>
+    <rect x="1110" y="24" width="160" height="42" rx="21" fill="#944614"/>
+    <text x="1136" y="50" class="buttonText">View Features</text>
+  </g>
+</svg>

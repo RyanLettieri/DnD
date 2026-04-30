@@ -1,7 +1,27 @@
 import React, { useState } from 'react';
+import {
+  Activity,
+  Brain,
+  BookOpen,
+  Cross,
+  Dumbbell,
+  Eye,
+  Flame,
+  Footprints,
+  Gauge,
+  MessageCircle,
+  MoveDiagonal,
+  Shield,
+  ShieldPlus,
+  Sparkles,
+  Swords,
+  WandSparkles,
+  Wrench,
+  Zap,
+  ScrollText
+} from 'lucide-react';
 import usePersistentState from '../hooks/usePersistentState';
 import '../styles/enhancements.css';
-import HPBar from './HPBar';
 import HitDice from './HitDice';
 import BackgroundScribe from './BackgroundScribe';
 import Card from './Card';
@@ -23,6 +43,36 @@ import EnhancedNotes from './EnhancedNotes';
 import DeathSavingThrows from './DeathSavingThrows';
 import { SPELL_DETAILS } from '../data/spells';
 import { DEFAULT_EQUIPMENT } from '../data/equipment';
+
+const SheetIcon = ({ name }) => {
+  const icons = {
+    strength: Dumbbell,
+    dexterity: MoveDiagonal,
+    constitution: Shield,
+    intelligence: Brain,
+    wisdom: Eye,
+    charisma: MessageCircle,
+    armor: Shield,
+    shield: Shield,
+    damage: Swords,
+    attack: Swords,
+    heal: Cross,
+    maxhp: ShieldPlus,
+    initiative: Zap,
+    speed: Footprints,
+    cantrip: Sparkles,
+    spell: BookOpen,
+    infuse: WandSparkles,
+    tool: Wrench,
+    effect: Activity,
+    rage: Flame,
+    background: ScrollText,
+    generic: Gauge
+  };
+
+  const Icon = icons[name] || icons.generic;
+  return <Icon aria-hidden="true" size={18} strokeWidth={2.2} />;
+};
 
 const allSkills = [
   "Acrobatics",
@@ -378,6 +428,17 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     setNewMaxHp(0);
   };
 
+  const updateTempHP = (value) => {
+    const tempHP = Math.max(0, Number(value) || 0);
+    const newStats = { ...stats, tempHP };
+    setStats(newStats);
+    updateCharacterData({ stats: newStats });
+  };
+
+  const adjustTempHP = (amount) => {
+    updateTempHP((Number(stats.tempHP) || 0) + amount);
+  };
+
   const getModifier = (stat) => {
     const parsedStat = parseInt(stat) || 10;
     return Math.floor((parsedStat - 10) / 2);
@@ -419,17 +480,17 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     const dexMod = getModifier(parseInt(stats.dexterity) || 10);
     
     return (
-      <div className="min-h-screen bg-[#fdf6e8] p-4">
+      <div className="character-overview min-h-screen p-4">
         {/* Three Column Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
+        <div className="sheet-grid grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5">
           
           {/* Left Column - Narrow */}
-          <div className="lg:col-span-3 space-y-4">
+          <div className="lg:col-span-3 space-y-5">
             
             {/* Abilities Card */}
-            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Abilities</h3>
-              <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="sheet-panel p-5">
+              <h3 className="sheet-title">Ability Scores</h3>
+              <div className="ability-score-list mb-4">
                 {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => {
                   const value = parseInt(stats[ability]) || 10;
                   const modifier = getModifier(value);
@@ -441,20 +502,20 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                                     ability === 'wisdom' ? 'WIS' : ability;
                   
                   const abilityIcons = {
-                    strength: '💪',
-                    dexterity: '🤸',
-                    constitution: '🛡️',
-                    intelligence: '🧠',
-                    wisdom: '👁️',
-                    charisma: '🗣️'
+                    strength: 'strength',
+                    dexterity: 'dexterity',
+                    constitution: 'constitution',
+                    intelligence: 'intelligence',
+                    wisdom: 'wisdom',
+                    charisma: 'charisma'
                   };
                   
                   return (
-                    <div key={ability} className="text-center">
-                      <div className="text-lg mb-1">{abilityIcons[ability]}</div>
-                      <div className="text-sm font-bold text-[#654321] mb-1">{abilityName}</div>
-                      <div className="text-lg font-bold text-[#654321]">{value}</div>
-                      <div className="text-base font-semibold text-[#8B4513]">
+                    <div key={ability} className="ability-score-row">
+                      <div className="sheet-icon ability-score-icon"><SheetIcon name={abilityIcons[ability]} /></div>
+                      <div className="ability-score-name">{abilityName}</div>
+                      <div className="ability-score-value">{value}</div>
+                      <div className="ability-score-mod">
                         {modifier >= 0 ? '+' : ''}{modifier}
                       </div>
                     </div>
@@ -463,52 +524,49 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               </div>
               <button 
                 onClick={() => setActiveTab('skills')}
-                className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                className="sheet-ghost-button w-full"
               >
                 View Saves & Skills
               </button>
             </div>
 
             {/* Proficiencies Card */}
-            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Proficiencies</h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <div className="font-semibold text-[#654321] mb-1">Armor</div>
-                  <div className="text-[#8B4513]">Light Armor, Medium Armor, Shields</div>
-                </div>
-                <div>
-                  <div className="font-semibold text-[#654321] mb-1">Weapons</div>
-                  <div className="text-[#8B4513]">Simple Weapons, Martial Weapons</div>
-                </div>
-                <div>
-                  <div className="font-semibold text-[#654321] mb-1">Tools</div>
-                  <div className="text-[#8B4513]">Tinker's Tools, Thieves' Tools</div>
-                </div>
-                <div>
-                  <div className="font-semibold text-[#654321] mb-1">Saving Throws</div>
-                  <div className="text-[#8B4513]">Strength & Constitution</div>
-                </div>
-                <div>
-                  <div className="font-semibold text-[#654321] mb-1">Skills</div>
-                  <div className="text-[#8B4513]">Choose two from: Athletics, Intimidation, Survival, Perception</div>
-                </div>
+            <div className="sheet-panel p-5">
+              <h3 className="sheet-title">Saving Throws</h3>
+              <div className="save-list">
+                {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => {
+                  const abilityName = ability === 'constitution' ? 'CON' : 
+                                    ability === 'intelligence' ? 'INT' : 
+                                    ability === 'dexterity' ? 'DEX' : 
+                                    ability === 'charisma' ? 'CHA' : 
+                                    ability === 'strength' ? 'STR' : 
+                                    ability === 'wisdom' ? 'WIS' : ability;
+                  const value = parseInt(stats[ability]) || 10;
+                  const modifier = getModifier(value) + (savingThrowProficiencies[ability] ? (stats.proficiencyBonus || 2) : 0);
+                  return (
+                    <div key={ability} className="save-row">
+                      <span className={`save-dot ${savingThrowProficiencies[ability] ? 'is-proficient' : ''}`} />
+                      <span className="save-name">{abilityName}</span>
+                      <span className="save-value">{modifier >= 0 ? '+' : ''}{modifier}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* Center Column - Wide */}
-          <div className="lg:col-span-6 space-y-4">
+          <div className="lg:col-span-6 space-y-5">
             
             {/* Combat Summary */}
-            <div className="bg-gradient-to-br from-[#fdf6e8] to-[#f5e6d3] border border-[#d4c8a8] rounded-2xl p-6 shadow-lg">
-              <h3 className="font-bold text-[#654321] mb-6 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Combat Summary</h3>
+            <div className="sheet-panel hp-panel p-6">
+              <h3 className="sheet-title centered-title">Hit Points</h3>
               
               {/* Modern 2-Column Layout */}
-              <div className="flex items-center justify-between gap-8 mb-8">
+              <div className="flex items-center justify-between gap-8 mb-8 hp-layout">
                 {/* Left: Circular HP Meter */}
                 <div className="flex-shrink-0">
-                  <div className="relative w-44 h-44">
+                  <div className="hp-orb relative w-44 h-44">
                     {/* HP Ring SVG */}
                     <svg className="w-full h-full" viewBox="0 0 176 176">
                       {/* Background ring */}
@@ -547,12 +605,15 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                     
                     {/* HP Text Overlay */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-3xl font-bold text-[#654321] leading-none">
+                      <div className="hp-current-value">
                         {Number(stats.HP) || 0}
                       </div>
-                      <div className="text-sm text-[#8B4513] leading-none mt-1">
+                      <div className="hp-max-value">
                         / {Number(stats.MaxHP) || 1}
                       </div>
+                      {(Number(stats.tempHP) || 0) > 0 && (
+                        <div className="hp-temp-badge">+{Number(stats.tempHP) || 0} temp</div>
+                      )}
                     </div>
                     
                     {/* Low HP Pulse Animation */}
@@ -563,39 +624,60 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                 </div>
                 
                 {/* Right: Vertical Action Buttons */}
-                <div className="flex flex-col gap-3 flex-1 max-w-xs">
+                <div className="hp-controls flex flex-col gap-3 flex-1 max-w-xs">
                   <button
                     onClick={() => openHpModal("damage")}
-                    className="flex items-center gap-3 px-4 py-3 bg-[#8B4513] hover:bg-[#654321] text-white rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md"
+                    className="sheet-action-button damage-action"
                   >
-                    <span className="text-lg">⚔️</span>
+                    <span className="sheet-icon action-icon"><SheetIcon name="damage" /></span>
                     <span>Damage</span>
                   </button>
                   <button
                     onClick={() => openHpModal("heal")}
-                    className="flex items-center gap-3 px-4 py-3 bg-[#8B4513] hover:bg-[#654321] text-white rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md"
+                    className="sheet-action-button heal-action"
                   >
-                    <span className="text-lg">💚</span>
+                    <span className="sheet-icon action-icon"><SheetIcon name="heal" /></span>
                     <span>Heal</span>
                   </button>
                   <button
                     onClick={() => setMaxHpModalOpen(true)}
-                    className="flex items-center gap-3 px-4 py-3 bg-[#8B4513] hover:bg-[#654321] text-white rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md"
+                    className="sheet-action-button maxhp-action"
                   >
-                    <span className="text-lg">🛡️</span>
+                    <span className="sheet-icon action-icon"><SheetIcon name="maxhp" /></span>
                     <span>Max HP</span>
                   </button>
                 </div>
               </div>
 
-              {/* Combat Badges */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f5e6d3] border-2 border-[#d4c8a8] rounded-lg mb-2">
-                    <span className="text-lg">🛡️</span>
+              <div className="hp-resource-panel">
+                <div className="temp-hp-control">
+                  <div>
+                    <div className="temp-hp-title">Temporary HP</div>
+                    <div className="temp-hp-note">Damage is absorbed here first.</div>
                   </div>
-                  <div className="text-xs text-[#8B4513]">AC</div>
-                  <div className="text-base font-bold text-[#654321]">
+                  <div className="temp-hp-stepper">
+                    <button onClick={() => adjustTempHP(-5)} aria-label="Decrease temporary HP by 5">-5</button>
+                    <button onClick={() => adjustTempHP(-1)} aria-label="Decrease temporary HP by 1">-</button>
+                    <input
+                      type="number"
+                      min="0"
+                      value={Number(stats.tempHP) || 0}
+                      onChange={(e) => updateTempHP(e.target.value)}
+                    />
+                    <button onClick={() => adjustTempHP(1)} aria-label="Increase temporary HP by 1">+</button>
+                    <button onClick={() => adjustTempHP(5)} aria-label="Increase temporary HP by 5">+5</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Combat Badges */}
+              <div className="combat-stat-panel grid grid-cols-3 gap-4 mb-4">
+                <div className="combat-stat">
+                  <div className="combat-stat-icon">
+                    <span className="sheet-icon stat-icon"><SheetIcon name="armor" /></span>
+                  </div>
+                  <div className="combat-stat-label">Armor Class</div>
+                  <div className="combat-stat-value">
                     {(() => {
                       if (characterClass === 'Barbarian') {
                         const dexMod = getModifier(parseInt(stats.dexterity) || 10);
@@ -607,22 +689,22 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                   </div>
                 </div>
                 
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f5e6d3] border-2 border-[#d4c8a8] rounded-lg mb-2">
-                    <span className="text-lg">⚡</span>
+                <div className="combat-stat">
+                  <div className="combat-stat-icon">
+                    <span className="sheet-icon stat-icon"><SheetIcon name="initiative" /></span>
                   </div>
-                  <div className="text-xs text-[#8B4513]">Initiative</div>
-                  <div className="text-base font-bold text-[#654321]">
+                  <div className="combat-stat-label">Initiative</div>
+                  <div className="combat-stat-value">
                     {dexMod >= 0 ? '+' : ''}{dexMod}
                   </div>
                 </div>
                 
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f5e6d3] border-2 border-[#d4c8a8] rounded-lg mb-2">
-                    <span className="text-lg">👟</span>
+                <div className="combat-stat">
+                  <div className="combat-stat-icon">
+                    <span className="sheet-icon stat-icon"><SheetIcon name="speed" /></span>
                   </div>
-                  <div className="text-xs text-[#8B4513]">Speed</div>
-                  <div className="text-base font-bold text-[#654321]">{stats.speed || 30}</div>
+                  <div className="combat-stat-label">Speed</div>
+                  <div className="combat-stat-value">{stats.speed || 30}<span className="combat-unit"> ft.</span></div>
                 </div>
               </div>
 
@@ -671,26 +753,32 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                 </div>
               )}
 
-              {/* Temp HP */}
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-semibold text-[#654321]">Temp HP</span>
-                  <input 
-                    type="number" 
-                    placeholder="0"
-                    className="w-20 px-2 py-1 border border-[#d4c8a8] rounded text-sm text-center"
-                    defaultValue={stats.tempHP || 0}
-                  />
-                </div>
+            </div>
+
+            <div className="sheet-panel active-effects-panel p-5">
+              <h3 className="sheet-title">Active Effects</h3>
+              <div className="effect-list">
+                {activeConditions.length > 0 ? (
+                  activeConditions.slice(0, 3).map((condition) => (
+                    <div className="effect-chip" key={condition}>
+                      <span className="sheet-icon effect-icon"><SheetIcon name="effect" /></span>
+                      <span className="effect-name">{condition}</span>
+                      <span className="effect-meta">Active</span>
+                      <span className="effect-duration">Tracked</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-effects">No active effects</div>
+                )}
               </div>
             </div>
 
             {/* Attacks/Spells Block */}
-            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>
+            <div className="sheet-panel attacks-panel p-5">
+              <h3 className="sheet-title">
                 {characterClass === 'Artificer' ? 'Spells/Cantrips' : 'Attacks'}
               </h3>
-              <div className="space-y-3 mb-4">
+              <div className="attack-table mb-4">
                 {(() => {
                   if (characterClass === 'Artificer') {
                     // Show prepared spells and cantrips for Artificer
@@ -702,7 +790,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                         allPreparedSpells.push({
                           name: spell,
                           type: 'Cantrip',
-                          icon: '✨',
+                          icon: 'cantrip',
                           details: SPELL_DETAILS[spell] || {}
                         });
                       });
@@ -715,7 +803,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                           allPreparedSpells.push({
                             name: spell,
                             type: `Level ${level}`,
-                            icon: '🔮',
+                            icon: 'spell',
                             details: SPELL_DETAILS[spell] || {}
                           });
                         });
@@ -729,15 +817,15 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                     }
                     
                     return allPreparedSpells.map((spell, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                      <div key={index} className="attack-row">
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg">{spell.icon}</span>
+                          <span className="sheet-icon attack-icon"><SheetIcon name={spell.icon} /></span>
                           <div className="flex-1">
-                            <div className="font-semibold text-[#654321]">{spell.name}</div>
-                            <div className="text-sm text-[#8B4513]">{spell.type}</div>
+                            <div className="attack-name">{spell.name}</div>
+                            <div className="attack-meta">{spell.type}</div>
                           </div>
                         </div>
-                        <div className="text-sm font-bold text-[#654321]">
+                        <div className="attack-damage">
                           {spell.details.damage ? spell.details.damage : '—'}
                         </div>
                       </div>
@@ -802,7 +890,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               </div>
               <button 
                 onClick={() => setActiveTab(characterClass === 'Artificer' ? 'spells' : 'actions')}
-                className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                className="sheet-ghost-button w-full"
               >
                 View All {characterClass === 'Artificer' ? 'Spells' : 'Attacks'}
               </button>
@@ -813,8 +901,8 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
           <div className="lg:col-span-3 space-y-4">
             
             {/* Quick Actions Block */}
-            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Quick Actions</h3>
+            <div className="sheet-panel p-5">
+              <h3 className="sheet-title with-gear">Quick Actions</h3>
               <div className="space-y-2 mb-4">
                 {(() => {
                   // Get all actions (default + custom)
@@ -823,28 +911,28 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                     
                     if (characterClass === 'Barbarian') {
                       defaultActions.push(
-                        { name: 'Rage', icon: '⚔️' },
-                        { name: 'Unarmored Defense', icon: '🛡️' },
-                        { name: 'Reckless Attack', icon: '⚡' },
-                        { name: 'Danger Sense', icon: '👁️' }
+                        { name: 'Rage', icon: 'rage' },
+                        { name: 'Unarmored Defense', icon: 'armor' },
+                        { name: 'Reckless Attack', icon: 'attack' },
+                        { name: 'Danger Sense', icon: 'wisdom' }
                       );
                     } else if (characterClass === 'Artificer') {
                       defaultActions.push(
-                        { name: 'Infuse Item', icon: '🔧' },
-                        { name: 'Shield', icon: '🛡️' }
+                        { name: 'Infuse Item', icon: 'infuse' },
+                        { name: 'Shield', icon: 'shield' }
                       );
                     } else if (character?.name === 'Inituga' && character?.race === 'Tortle') {
                       defaultActions.push(
-                        { name: 'Eldritch Cannon', icon: '🔫' },
-                        { name: 'Firebolt Cantrip', icon: '⚡' },
-                        { name: 'Shell Defense', icon: '🛡️' }
+                        { name: 'Eldritch Cannon', icon: 'spell' },
+                        { name: 'Firebolt Cantrip', icon: 'cantrip' },
+                        { name: 'Shell Defense', icon: 'shield' }
                       );
                     }
                     
                     // Add custom actions with default icon
                     const customActionsWithIcons = customQuickActions.map(action => ({
                       name: action,
-                      icon: '⚙️'
+                      icon: 'tool'
                     }));
                     
                     return [...defaultActions, ...customActionsWithIcons];
@@ -859,15 +947,15 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                   }
 
                   return allActions.map((action, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded hover:bg-[#e8dcc0] transition-colors cursor-pointer">
-                      <span className="text-lg">{action.icon}</span>
+                    <div key={index} className="side-action-row">
+                      <span className="sheet-icon side-action-icon"><SheetIcon name={action.icon} /></span>
                       <div className="flex-1">
-                        <div className="text-sm font-semibold text-[#654321]">{action.name}</div>
+                        <div className="side-action-name">{action.name}</div>
                       </div>
                       {customQuickActions.includes(action.name) && (
                         <button
                           onClick={() => setCustomQuickActions(prev => prev.filter(a => a !== action.name))}
-                          className="text-red-500 hover:text-red-700 text-xs ml-2"
+                          className="remove-link"
                         >
                           Remove
                         </button>
@@ -884,7 +972,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                     <input
                       type="text"
                       placeholder="Add custom quick action..."
-                      className="flex-1 min-w-0 px-2 py-1 border border-[#d4c8a8] rounded text-sm"
+                      className="sheet-input flex-1 min-w-0"
                       value={quickActionInput}
                       onChange={(e) => {
                         const value = e.target.value.trim();
@@ -928,7 +1016,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                           setShowQuickActionSuggestions(false);
                         }
                       }}
-                      className="px-2 py-1 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-xs font-semibold whitespace-nowrap"
+                      className="sheet-add-button"
                     >
                       Add
                     </button>
@@ -959,15 +1047,15 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               
               <button 
                 onClick={() => setActiveTab('actions')}
-                className="w-full px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors"
+                className="sheet-ghost-button w-full"
               >
                 Manage Actions
               </button>
             </div>
 
             {/* Conditions Block */}
-            <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
-              <h3 className="font-bold text-[#654321] mb-3 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Conditions</h3>
+            <div className="sheet-panel p-5">
+              <h3 className="sheet-title with-plus">Conditions</h3>
               
               {/* Add Condition Input */}
               <div className="mb-3">
@@ -976,7 +1064,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                     <input
                       type="text"
                       placeholder="Enter condition name..."
-                      className="flex-1 min-w-0 px-3 py-2 border border-[#d4c8a8] rounded text-sm"
+                      className="sheet-input flex-1 min-w-0"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                           const input = e.target;
@@ -1012,7 +1100,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                           setShowSuggestions(false);
                         }
                       }}
-                      className="px-3 py-2 bg-[#8B4513] hover:bg-[#654321] text-white rounded text-sm font-semibold transition-colors whitespace-nowrap"
+                      className="sheet-add-button"
                     >
                       Add
                     </button>
@@ -1043,10 +1131,10 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               <div className="space-y-2">
                 {activeConditions.length > 0 ? (
                   activeConditions.map((condition, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
+                    <div key={index} className="side-action-row">
                       <div className="flex-1">
-                        <div className="text-sm font-semibold text-[#654321]">{condition}</div>
-                        <div className="text-xs text-[#8B4513]">Duration: 1 minute</div>
+                        <div className="side-action-name">{condition}</div>
+                        <div className="side-action-meta">Duration: 1 minute</div>
                       </div>
                       <button
                         onClick={() => setActiveConditions(prev => 
@@ -1067,7 +1155,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
         </div>
 
         {/* Bottom Row - Full Width Features & Traits */}
-        <div className="bg-[#fdf6e8] border border-[#d4c8a8] rounded p-4">
+        <div className="sheet-feature-strip sheet-panel p-5">
           <h3 className="font-bold text-[#654321] mb-4 text-base" style={{ fontFamily: 'Cinzel, serif', textTransform: 'small-caps' }}>Features & Traits</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {(() => {
@@ -1075,28 +1163,28 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                 return (
                   <>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">⚔️</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="rage" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Rage</div>
                         <div className="text-xs text-[#8B4513]">While raging, you gain advantage on Strength checks and saving throws, plus resistance to bludgeoning, piercing, and slashing damage.</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">🛡️</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="armor" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Unarmored Defense</div>
                         <div className="text-xs text-[#8B4513]">Your AC equals 10 + your Dexterity modifier + your Constitution modifier when not wearing armor.</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">⚡</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="attack" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Reckless Attack</div>
                         <div className="text-xs text-[#8B4513]">You can choose to attack recklessly, gaining advantage on the attack roll but giving enemies advantage on attacks against you.</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">👁️</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="wisdom" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Danger Sense</div>
                         <div className="text-xs text-[#8B4513]">You have advantage on Dexterity saving throws against effects that you can see, such as traps and spells.</div>
@@ -1108,28 +1196,28 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                 return (
                   <>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">🔧</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="tool" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Magical Tinkering</div>
                         <div className="text-xs text-[#8B4513]">You can cast the Mending cantrip at will and can detect magic within 10 feet.</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">⚡</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="initiative" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Flash of Genius</div>
                         <div className="text-xs text-[#8B4513]">You can create a flash of mental energy that forces creatures to make an Intelligence save or be stunned.</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">🛡️</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="infuse" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Infuse Item</div>
                         <div className="text-xs text-[#8B4513]">You can infuse nonmagical items with magical properties, creating temporary magic items.</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-3 bg-[#f5e6d3] border border-[#d4c8a8] rounded">
-                      <span className="text-2xl">🎯</span>
+                      <span className="sheet-icon feature-icon"><SheetIcon name="spell" /></span>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-[#654321] mb-1">Spellcasting</div>
                         <div className="text-xs text-[#8B4513]">You can cast spells from the Artificer spell list, preparing a number of spells equal to your Intelligence modifier.</div>
@@ -1167,7 +1255,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     if (characterClass !== 'Artificer') {
       return (
         <div className="text-center parchment-text-light py-16">
-          <div className="text-6xl mb-4">📜</div>
+          <div className="sheet-empty-icon"><SheetIcon name="background" /></div>
           <h3 className="text-xl font-bold mb-2">No Scribe Background</h3>
           <p className="text-sm max-w-md mx-auto">
             The Scribe background is specific to Artificer characters. {characterClass}s have different background options and features.
@@ -1177,7 +1265,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     }
     
     return (
-      <div className="space-y-6">
+      <div className="tab-page space-y-6">
         <BackgroundScribe 
           characterDataPrefix={characterDataPrefix}
           character={character}
@@ -1348,7 +1436,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
   };
 
   const renderActionsTab = () => (
-    <div className="space-y-6">
+    <div className="tab-page space-y-6">
       <EnhancedActions character={character} stats={stats} />
       <QuickActions 
         stats={stats}
@@ -1368,7 +1456,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     if (!spellcastingClasses.includes(characterClass)) {
       return (
         <div className="text-center parchment-text-light py-16">
-          <div className="text-6xl mb-4">⚔️</div>
+          <div className="sheet-empty-icon"><SheetIcon name="attack" /></div>
           <h3 className="text-xl font-bold mb-2">No Spellcasting</h3>
           <p className="text-sm max-w-md mx-auto">
             {characterClass}s do not have spellcasting abilities. Focus on your martial prowess and class features instead!
@@ -1378,7 +1466,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     }
     
     return (
-      <div className="space-y-6">
+      <div className="tab-page space-y-6">
         <SpellPreparation 
           level={stats.level}
           onUpdatePreparedSpells={setPreparedSpells}
@@ -1424,7 +1512,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               })}
               {Object.values(preparedSpells).flat().length === 0 && (
                 <div className="text-center parchment-text-light py-8">
-                  <div className="text-2xl mb-2">📚</div>
+                  <div className="sheet-empty-icon small"><SheetIcon name="spell" /></div>
                   <div>No spells prepared yet</div>
                   <div className="text-sm">Use the Spell Preparation section above to prepare your spells</div>
                 </div>
@@ -1467,7 +1555,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     if (characterClass !== 'Artificer') {
       return (
         <div className="text-center parchment-text-light py-16">
-          <div className="text-6xl mb-4">🔧</div>
+          <div className="sheet-empty-icon"><SheetIcon name="infuse" /></div>
           <h3 className="text-xl font-bold mb-2">No Infusions</h3>
           <p className="text-sm max-w-md mx-auto">
             Only Artificers can create magical infusions. {characterClass}s have other unique class abilities instead!
@@ -1630,40 +1718,34 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
   };
 
   return (
-    <div className="min-h-screen" style={{
+    <div className="character-sheet-shell min-h-screen" style={{
       backgroundImage: 'url(/framed-background.png)',
       backgroundSize: '100% 100%',
       backgroundRepeat: 'no-repeat',
       backgroundPosition: 'center'
     }}>
       {/* Ornate border container */}
-      <div className="min-h-screen relative" style={{
-        border: '12px solid #8B4513',
-        borderImage: 'linear-gradient(45deg, #654321, #8B4513, #A0522D, #8B4513, #654321) 1',
-        margin: '8px',
-        borderRadius: '20px',
-        boxShadow: 'inset 0 0 50px rgba(139, 69, 19, 0.3), 0 0 30px rgba(0, 0, 0, 0.5)'
-      }}>
+      <div className="character-sheet-frame min-h-screen relative">
 
       {/* Full-width page layout */}
-      <div className="w-full min-h-screen bg-[#fdf6e8]">
+      <div className="w-full min-h-screen bg-transparent">
         
         {/* Compact Header Bar */}
-        <div className="w-full bg-[#fdf6e8] border-b border-[#d4c8a8] px-4 py-3">
-          <div className="flex items-center justify-between w-full">
+        <div className="sheet-header w-full px-8 py-5">
+          <div className="flex items-center justify-between w-full gap-6">
             
             {/* Left: Back Button */}
             <button
               onClick={onBackToDashboard}
-              className="px-3 py-1 text-[#654321] hover:text-[#8B4513] font-medium transition-colors flex items-center gap-2"
+              className="sheet-back-link"
             >
               ← Back to Dashboard
             </button>
 
             {/* Center: Character Info */}
-            <div className="flex items-center space-x-4 flex-1 justify-center">
+            <div className="sheet-identity flex items-center space-x-6 flex-1 justify-center">
               {/* Character Portrait */}
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#8B4513] shadow-lg">
+              <div className="sheet-portrait w-32 h-32 rounded-full overflow-hidden">
                 <img 
                   src={character?.portrait || '/default-character-portrait.png'} 
                   alt={character?.name || 'Character'} 
@@ -1672,7 +1754,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
               </div>
               
               {/* Character Name and Details */}
-              <div className="text-center">
+              <div className="sheet-nameplate">
                 <input 
                   type="text" 
                   value={stats.characterName}
@@ -1681,22 +1763,22 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                     setStats(newStats);
                     updateCharacterData({ stats: newStats });
                   }}
-                  className="bg-transparent border-b border-[#d4c8a8] focus:border-[#8B4513] text-2xl font-bold text-[#654321] focus:outline-none px-1 py-0.5 text-center"
+                  className="sheet-name-input"
                   placeholder="Character Name"
                   style={{ fontFamily: 'Cinzel, serif' }}
                 />
-                <div className="text-sm text-[#654321] mt-1">
+                <div className="sheet-subtitle mt-1">
                   {character?.class} • Level {stats.level} • {character?.race || 'Race not specified'}
                 </div>
-                <div className="text-xs text-[#8B4513] italic">
+                <div className="sheet-epithet">
                   {getLevelTitle(stats.level, character?.class)}
                 </div>
               </div>
             </div>
 
             {/* Right: Rest Buttons */}
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1 mr-3">
+            <div className="sheet-header-actions flex items-center space-x-3">
+              <div className="level-control flex items-center space-x-2 mr-3">
                 <span className="text-sm font-semibold text-[#654321] mr-1">Level</span>
                 <button 
                   onClick={() => {
@@ -1708,9 +1790,9 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                       level: newLevel
                     });
                   }}
-                  className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
+                  className="level-stepper"
                 >−</button>
-                <span className="font-bold text-[#654321] px-2 text-sm">{stats.level}</span>
+                <span className="level-value">{stats.level}</span>
                 <button 
                   onClick={() => {
                     const newLevel = Math.min(20, stats.level + 1);
@@ -1721,13 +1803,13 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                       level: newLevel
                     });
                   }}
-                  className="w-6 h-6 bg-[#8B4513] hover:bg-[#654321] rounded text-white text-xs font-bold"
+                  className="level-stepper"
                 >+</button>
               </div>
-              <button className="px-3 py-1 bg-[#8B4513] hover:bg-[#654321] text-white text-sm font-medium transition-colors">
+              <button className="rest-button short-rest">
                 Short Rest
               </button>
-              <button className="px-3 py-1 bg-[#654321] hover:bg-[#8B4513] text-white text-sm font-medium transition-colors">
+              <button className="rest-button long-rest">
                 Long Rest
               </button>
             </div>
@@ -1735,13 +1817,13 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
         </div>
 
         {/* Full-width Tab Bar */}
-        <div className="w-full bg-[#f5e6d3] border-b border-[#d4c8a8] px-4">
-          <div className="flex space-x-6 overflow-x-auto">
+        <div className="sheet-tabs w-full px-10">
+          <div className="flex space-x-10 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
+                className={`sheet-tab px-3 py-4 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                   activeTab === tab.id
                     ? 'text-[#654321] border-[#8B4513]'
                     : 'text-[#8B4513] border-transparent hover:text-[#654321]'
@@ -1755,7 +1837,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
         </div>
         
         {/* Three-column content area */}
-        <div className="p-6">
+        <div className="sheet-content p-6">
           {renderTabContent()}
         </div>
       </div>
