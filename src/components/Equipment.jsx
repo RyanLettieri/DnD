@@ -3,6 +3,7 @@ import Card from './Card';
 import { EQUIPMENT_TYPES } from '../data/equipment';
 
 const Equipment = ({ equipment, onUpdateEquipment }) => {
+  const [equipmentSearch, setEquipmentSearch] = useState('');
   const [newItem, setNewItem] = useState({
     name: '',
     type: EQUIPMENT_TYPES.GEAR,
@@ -56,6 +57,9 @@ const Equipment = ({ equipment, onUpdateEquipment }) => {
   };
 
   const totalWeight = calculateTotalWeight();
+  const equipmentEntries = Object.entries(equipment || {}).filter(([itemName, details]) =>
+    `${itemName} ${details?.description || ''} ${details?.type || ''}`.toLowerCase().includes(equipmentSearch.toLowerCase())
+  );
 
   return (
     <Card>
@@ -128,8 +132,17 @@ const Equipment = ({ equipment, onUpdateEquipment }) => {
         </div>
 
         {/* Equipment list */}
+        <div className="mb-4">
+          <input
+            type="search"
+            value={equipmentSearch}
+            onChange={(e) => setEquipmentSearch(e.target.value)}
+            placeholder="Search equipment..."
+            className="sheet-input w-full"
+          />
+        </div>
         <div className="space-y-2">
-          {Object.entries(equipment).map(([itemName, details]) => (
+          {equipmentEntries.map(([itemName, details]) => (
             <div key={itemName} className="parchment-card p-4 rounded flex justify-between items-start hover:shadow-md transition-all duration-200">
               <div>
                 <h3 className="parchment-text font-bold">{itemName}</h3>
@@ -155,6 +168,13 @@ const Equipment = ({ equipment, onUpdateEquipment }) => {
               </div>
             </div>
           ))}
+          {equipmentEntries.length === 0 && (
+            <div className="empty-state">
+              {Object.keys(equipment || {}).length === 0
+                ? 'No equipment yet. Add weapons, armor, tools, or adventuring gear above.'
+                : 'No equipment matches your search.'}
+            </div>
+          )}
         </div>
       </Card.Content>
     </Card>

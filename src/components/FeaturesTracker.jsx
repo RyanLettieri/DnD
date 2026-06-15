@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from './Card';
 
 const FeaturesTracker = () => {
+  const [featureSearch, setFeatureSearch] = useState('');
   const [features, setFeatures] = useState({
     // Tortle racial features
     "Natural Armor": {
@@ -91,16 +92,27 @@ const FeaturesTracker = () => {
     }
   };
 
+  const visibleFeatures = Object.entries(features).filter(([featureName, feature]) =>
+    `${featureName} ${feature.description} ${feature.type}`.toLowerCase().includes(featureSearch.toLowerCase())
+  );
+
   return (
     <Card>
       <Card.Header>Features & Abilities</Card.Header>
       <Card.Content>
         <div className="space-y-4">
           {/* Control Button */}
-          <div className="flex justify-end">
+          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+            <input
+              type="search"
+              value={featureSearch}
+              onChange={(e) => setFeatureSearch(e.target.value)}
+              placeholder="Search features..."
+              className="sheet-input flex-1"
+            />
             <button
               onClick={resetAllFeatures}
-              className="bg-artificerBronze/80 hover:bg-artificerBronze text-white px-3 py-1 rounded text-sm button-glow"
+              className="action-button secondary"
             >
               Reset All
             </button>
@@ -108,7 +120,7 @@ const FeaturesTracker = () => {
 
           {/* Features List */}
           <div className="space-y-3">
-            {Object.entries(features).map(([featureName, feature]) => (
+            {visibleFeatures.map(([featureName, feature]) => (
               <div
                 key={featureName}
                 className={`parchment-card p-4 rounded transition-all duration-200 ${
@@ -147,6 +159,11 @@ const FeaturesTracker = () => {
                 </div>
               </div>
             ))}
+            {visibleFeatures.length === 0 && (
+              <div className="empty-state">
+                No features match your search. Try a different keyword.
+              </div>
+            )}
           </div>
 
           {/* Feature Summary */}

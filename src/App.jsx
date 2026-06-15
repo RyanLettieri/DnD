@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import usePersistentState from './hooks/usePersistentState';
 import CharacterDashboard from './components/CharacterDashboard';
 import CharacterSheet from './components/CharacterSheet';
+import { ABILITY_KEYS } from './data/characterOptions';
+import { getAbilityModifier, getClassConfig, getProficiencyBonus } from './utils/characterRules';
 import './styles/enhancements.css';
 
 const DEFAULT_STATS = {
@@ -79,6 +81,60 @@ const DEFAULT_EQUIPMENT = [
   { name: "Leather Armor", quantity: 1, description: "Light armor" },
   { name: "Explorer's Pack", quantity: 1, description: "Contains various adventuring gear" }
 ];
+
+const buildSavingThrows = (characterClass) => {
+  const classConfig = getClassConfig(characterClass);
+  return Object.keys(DEFAULT_SAVING_THROWS).reduce((acc, ability) => ({
+    ...acc,
+    [ability]: (classConfig.savingThrows || []).includes(ability)
+  }), {});
+};
+
+const buildProficiencies = (characterClass) => {
+  const classConfig = getClassConfig(characterClass);
+  return Object.keys(DEFAULT_PROFICIENCIES).reduce((acc, skill) => ({
+    ...acc,
+    [skill]: (classConfig.defaultSkills || []).includes(skill)
+  }), {});
+};
+
+const buildStats = (characterData, previousStats = {}) => {
+  const classConfig = getClassConfig(characterData.class);
+  const level = Math.min(20, Math.max(1, Number(characterData.level) || 1));
+  const abilities = ABILITY_KEYS.reduce((acc, ability) => ({
+    ...acc,
+    [ability]: Number(characterData.abilities?.[ability] ?? previousStats[ability] ?? 10) || 10
+  }), {});
+  const conMod = getAbilityModifier(abilities.constitution);
+  const maxHP = Math.max(1, Number(previousStats.MaxHP) || classConfig.hitDiceSize + conMod);
+  const unarmoredAC = 10 + getAbilityModifier(abilities.dexterity);
+
+  return {
+    ...DEFAULT_STATS,
+    ...previousStats,
+    ...abilities,
+    characterName: characterData.name,
+    level,
+    class: characterData.class,
+    race: characterData.race,
+    proficiencyBonus: getProficiencyBonus(level),
+    hitDiceSize: classConfig.hitDiceSize,
+    armorClass: characterData.class === 'Barbarian'
+      ? 10 + getAbilityModifier(abilities.dexterity) + getAbilityModifier(abilities.constitution)
+      : Number(previousStats.armorClass) || (characterData.race === 'Tortle' ? 17 : unarmoredAC),
+    HP: Math.min(Number(previousStats.HP) || maxHP, maxHP),
+    MaxHP: maxHP
+  };
+};
+
+const buildBackgroundScribe = (characterData, previousBackground = {}) => ({
+  traits: characterData.personalityTraits ?? previousBackground.traits ?? '',
+  ideals: characterData.ideals ?? previousBackground.ideals ?? '',
+  bonds: characterData.bonds ?? previousBackground.bonds ?? '',
+  flaws: characterData.flaws ?? previousBackground.flaws ?? '',
+  originNotes: characterData.backstory ?? previousBackground.originNotes ?? '',
+  bonusLanguages: previousBackground.bonusLanguages || ['', '']
+});
 
 export default function App() {
   const [characters, setCharacters] = usePersistentState('characters', {});
@@ -214,141 +270,35 @@ export default function App() {
 
   const createCharacter = (characterData) => {
     const characterId = `character_${Date.now()}`;
-    
-    // Class-specific defaults
-    const getClassDefaults = (characterClass) => {
-      switch (characterClass) {
-        case 'Barbarian':
-          return {
-            ...DEFAULT_STATS,
-            characterName: characterData.name,
-            level: characterData.level,
-            class: 'Barbarian',
-            // All stats default to 10 as requested
-            strength: 10,
-            constitution: 10,
-            dexterity: 10,
-            intelligence: 10,
-            wisdom: 10,
-            charisma: 10,
-            // Barbarians use d12 hit dice
-            hitDiceSize: 12,
-            // Unarmored Defense: AC = 10 + DEX + CON (will be calculated dynamically)
-            armorClass: 10,
-            proficiencyBonus: 2,
-            HP: 12 + 0, // d12 + CON mod (10 CON = +0)
-            MaxHP: 12 + 0,
-            // Rage damage
-            rageDamage: 2,
-            ragesPerDay: Math.max(1, Math.floor(characterData.level / 2) + 2)
-          };
-        case 'Artificer':
-        default:
-          return {
-            ...DEFAULT_STATS,
-            characterName: characterData.name,
-            level: characterData.level,
-            class: characterClass
-          };
-      }
-    };
-    
-    const getClassSavingThrows = (characterClass) => {
-      switch (characterClass) {
-        case 'Barbarian':
-          return {
-            strength: true,
-            dexterity: false,
-            constitution: true,
-            intelligence: false,
-            wisdom: false,
-            charisma: false
-          };
-        case 'Artificer':
-        default:
-          return DEFAULT_SAVING_THROWS;
-      }
-    };
-    
-    const getClassProficiencies = (characterClass) => {
-      switch (characterClass) {
-        case 'Barbarian':
-          return {
-            ...DEFAULT_PROFICIENCIES,
-            "Athletics": true, // Barbarians are proficient in Athletics
-            "Survival": true  // And Survival
-          };
-        default:
-          return DEFAULT_PROFICIENCIES;
-      }
-    };
-    
-    const getClassEquipment = (characterClass) => {
-      switch (characterClass) {
-        case 'Barbarian':
-          return [
-            { name: "Greataxe", quantity: 1, description: "Two-handed melee weapon" },
-            { name: "Handaxe", quantity: 2, description: "One-handed melee weapon" },
-            { name: "Explorer's Pack", quantity: 1, description: "Contains various adventuring gear" },
-            { name: "Javelin", quantity: 4, description: "Thrown weapon" }
-          ];
-        default:
-          return DEFAULT_EQUIPMENT;
-      }
-    };
+    const classConfig = getClassConfig(characterData.class);
+    const stats = buildStats(characterData);
 
-    const getClassToolProficiencies = (characterClass) => {
-      switch (characterClass) {
-        case 'Barbarian':
-          return []; // Barbarians don't get tool proficiencies by default
-        case 'Artificer':
-          return ["Tinker's Tools"];
-        default:
-          return [];
-      }
-    };
-
-    const getClassLanguages = (characterClass) => {
-      switch (characterClass) {
-        case 'Barbarian':
-          return ["Common"]; // Only Common by default
-        case 'Artificer':
-          return ["Common"]; // Only Common by default
-        default:
-          return ["Common"];
-      }
-    };
-    
-    const classDefaults = getClassDefaults(characterData.class);
-    
     const newCharacter = {
       id: characterId,
       name: characterData.name,
       class: characterData.class,
-      level: characterData.level,
+      level: stats.level,
       race: characterData.race,
-      portrait: null, // Blank for new characters
+      background: characterData.background,
+      alignment: characterData.alignment,
+      portrait: characterData.portrait || null,
+      personalityTraits: characterData.personalityTraits || '',
+      ideals: characterData.ideals || '',
+      bonds: characterData.bonds || '',
+      flaws: characterData.flaws || '',
+      backstory: characterData.backstory || '',
+      abilityMethod: characterData.abilityMethod || 'custom',
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
-      stats: classDefaults,
-      proficiencies: getClassProficiencies(characterData.class),
-      savingThrows: getClassSavingThrows(characterData.class),
+      stats,
+      proficiencies: buildProficiencies(characterData.class),
+      savingThrows: buildSavingThrows(characterData.class),
       conditions: [],
-      equipment: getClassEquipment(characterData.class),
-      preparedSpells: {}, // Barbarians don't have spells
-      toolProficiencies: getClassToolProficiencies(characterData.class),
-      languages: getClassLanguages(characterData.class),
-      // Only add backgroundScribe for Artificers
-      ...(characterData.class === 'Artificer' && {
-        backgroundScribe: {
-          traits: '',
-          ideals: '',
-          bonds: '',
-          flaws: '',
-          originNotes: '',
-          bonusLanguages: ['', '']
-        }
-      })
+      equipment: classConfig.equipment || DEFAULT_EQUIPMENT,
+      preparedSpells: {},
+      toolProficiencies: classConfig.tools || [],
+      languages: ["Common"],
+      backgroundScribe: buildBackgroundScribe(characterData)
     };
 
     setCharacters(prev => ({ ...prev, [characterId]: newCharacter }));
@@ -390,10 +340,50 @@ export default function App() {
     }
   };
 
-  const editCharacter = (character) => {
-    // For now, we'll just log this. We can implement editing later
-    console.log('Edit character:', character);
-    // TODO: Open edit modal with character data
+  const editCharacter = (characterId, characterData) => {
+    setCharacters(prev => {
+      const existingCharacter = prev[characterId];
+      if (!existingCharacter) return prev;
+
+      const classConfig = getClassConfig(characterData.class);
+      const stats = buildStats(characterData, existingCharacter.stats);
+      const updatedCharacter = {
+        ...existingCharacter,
+        name: characterData.name,
+        class: characterData.class,
+        level: stats.level,
+        race: characterData.race,
+        background: characterData.background,
+        alignment: characterData.alignment,
+        portrait: characterData.portrait || null,
+        personalityTraits: characterData.personalityTraits || '',
+        ideals: characterData.ideals || '',
+        bonds: characterData.bonds || '',
+        flaws: characterData.flaws || '',
+        backstory: characterData.backstory || '',
+        abilityMethod: characterData.abilityMethod || existingCharacter.abilityMethod || 'custom',
+        lastModified: new Date().toISOString(),
+        stats,
+        proficiencies: characterData.class === existingCharacter.class
+          ? existingCharacter.proficiencies
+          : buildProficiencies(characterData.class),
+        savingThrows: characterData.class === existingCharacter.class
+          ? existingCharacter.savingThrows
+          : buildSavingThrows(characterData.class),
+        equipment: characterData.class === existingCharacter.class
+          ? existingCharacter.equipment
+          : (classConfig.equipment || DEFAULT_EQUIPMENT),
+        toolProficiencies: characterData.class === existingCharacter.class
+          ? existingCharacter.toolProficiencies
+          : (classConfig.tools || []),
+        backgroundScribe: buildBackgroundScribe(characterData, existingCharacter.backgroundScribe)
+      };
+
+      return {
+        ...prev,
+        [characterId]: updatedCharacter
+      };
+    });
   };
 
   const backToDashboard = () => {

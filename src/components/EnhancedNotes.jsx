@@ -19,6 +19,7 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
   });
   const [newLocation, setNewLocation] = useState({ name: '', type: '', description: '', notes: '' });
   const [editingItem, setEditingItem] = useState(null);
+  const [noteSearch, setNoteSearch] = useState('');
   const [collapsedSessions, setCollapsedSessions] = usePersistentState(`${characterDataPrefix}_collapsedSessions`, {});
   const [collapsedCharacters, setCollapsedCharacters] = usePersistentState(`${characterDataPrefix}_collapsedCharacters`, {});
   const [collapsedLocations, setCollapsedLocations] = usePersistentState(`${characterDataPrefix}_collapsedLocations`, {});
@@ -85,6 +86,16 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
   const toggleCharacterCollapse = (id) => {
     setCollapsedCharacters(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  const matchesSearch = (...values) => {
+    const query = noteSearch.trim().toLowerCase();
+    if (!query) return true;
+    return values.join(' ').toLowerCase().includes(query);
+  };
+
+  const visibleSessions = sessions.filter(session => matchesSearch(session.title, session.date, session.notes));
+  const visibleCharacters = characters.filter(character => matchesSearch(character.name, character.role, character.description, character.notes, character.status));
+  const visibleLocations = locations.filter(location => matchesSearch(location.name, location.type, location.description, location.notes));
 
   const collapseAllSessions = () => {
     const all = sessions.reduce((acc, s) => ({ ...acc, [s.id]: true }), {});
@@ -196,6 +207,14 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
               ))}
             </div>
 
+            <input
+              type="search"
+              value={noteSearch}
+              onChange={(e) => setNoteSearch(e.target.value)}
+              placeholder="Search campaign notes..."
+              className="sheet-input w-full"
+            />
+
             {/* Sessions Tab */}
             {activeTab === 'sessions' && (
               <div className="space-y-4">
@@ -237,7 +256,7 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
                   <button onClick={expandAllSessions} className="text-xs px-2 py-1 parchment-card hover:shadow">Expand All</button>
                 </div>
                 <div className="space-y-3">
-                  {sessions.map(session => (
+                  {visibleSessions.map(session => (
                     <div key={session.id} className="parchment-card p-4 rounded-lg border border-artificerBronze/20">
                       {editingItem?.type === 'session' && editingItem?.id === session.id ? (
                         // EDIT MODE
@@ -305,6 +324,11 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
                       )}
                     </div>
                   ))}
+                  {visibleSessions.length === 0 && (
+                    <div className="empty-state">
+                      {sessions.length === 0 ? 'No sessions yet. Add your first session note above.' : 'No sessions match your search.'}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -406,7 +430,7 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
                   <button onClick={expandAllCharacters} className="text-xs px-2 py-1 parchment-card hover:shadow">Expand All</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {characters.map(character => (
+                  {visibleCharacters.map(character => (
                     <div key={character.id} className="parchment-card p-4 rounded-lg border border-artificerBronze/20">
                       {editingItem?.type === 'character' && editingItem?.id === character.id ? (
                         // EDIT MODE
@@ -543,6 +567,11 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
                       )}
                     </div>
                   ))}
+                  {visibleCharacters.length === 0 && (
+                    <div className="empty-state">
+                      {characters.length === 0 ? 'No campaign characters yet. Add an NPC or party contact above.' : 'No characters match your search.'}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -603,7 +632,7 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
                   <button onClick={expandAllLocations} className="text-xs px-2 py-1 parchment-card hover:shadow">Expand All</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {locations.map(location => (
+                  {visibleLocations.map(location => (
                     <div key={location.id} className="parchment-card p-4 rounded-lg border border-artificerBronze/20">
                       {editingItem?.type === 'location' && editingItem?.id === location.id ? (
                         // EDIT MODE
@@ -690,6 +719,11 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
                       )}
                     </div>
                   ))}
+                  {visibleLocations.length === 0 && (
+                    <div className="empty-state">
+                      {locations.length === 0 ? 'No locations yet. Add a town, dungeon, shop, or landmark above.' : 'No locations match your search.'}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

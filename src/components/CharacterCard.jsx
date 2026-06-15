@@ -1,4 +1,5 @@
 import React from 'react';
+import { UserRound } from 'lucide-react';
 
 const CharacterCard = ({ character, onSelect, onEdit, onDelete }) => {
   const formatDate = (timestamp) => {
@@ -20,7 +21,7 @@ const CharacterCard = ({ character, onSelect, onEdit, onDelete }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <span className="text-4xl text-gray-500">👤</span>
+            <UserRound className="text-[#8B4513]" size={38} strokeWidth={1.8} />
           )}
         </div>
       </div>
@@ -33,6 +34,12 @@ const CharacterCard = ({ character, onSelect, onEdit, onDelete }) => {
           <div>Race: {character.race || 'Not specified'}</div>
         </div>
       </div>
+
+      {character.conditions?.length > 0 && (
+        <div className="mt-3 empty-state py-2">
+          {character.conditions.length} active condition{character.conditions.length === 1 ? '' : 's'}
+        </div>
+      )}
 
       {/* Stats Preview */}
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -64,7 +71,7 @@ const CharacterCard = ({ character, onSelect, onEdit, onDelete }) => {
             e.stopPropagation();
             onEdit(character);
           }}
-          className="px-3 py-1 bg-artificerBronze/80 hover:bg-artificerBronze text-white rounded text-sm font-semibold transition-all"
+          className="action-button utility text-sm px-3 py-1"
         >
           Edit
         </button>
@@ -73,7 +80,7 @@ const CharacterCard = ({ character, onSelect, onEdit, onDelete }) => {
             e.stopPropagation();
             onDelete(character);
           }}
-          className="px-3 py-1 bg-red-500/80 hover:bg-red-500 text-white rounded text-sm font-semibold transition-all"
+          className="action-button danger text-sm px-3 py-1"
         >
           Delete
         </button>

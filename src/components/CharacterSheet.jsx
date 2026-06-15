@@ -43,6 +43,8 @@ import EnhancedNotes from './EnhancedNotes';
 import DeathSavingThrows from './DeathSavingThrows';
 import { SPELL_DETAILS } from '../data/spells';
 import { DEFAULT_EQUIPMENT } from '../data/equipment';
+import { DND_CLASSES } from '../data/characterOptions';
+import { applyRest, getDerivedStats, previewRestChanges } from '../utils/characterRules';
 
 const SheetIcon = ({ name }) => {
   const icons = {
@@ -260,6 +262,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
   const [maxHpModalOpen, setMaxHpModalOpen] = useState(false);
   const [newMaxHp, setNewMaxHp] = useState(0);
   const [activeTab, setActiveTab] = useState('main');
+  const [restPreview, setRestPreview] = useState(null);
   
   // States for conditions autocomplete
   const [inputValue, setInputValue] = useState('');
@@ -362,13 +365,15 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     'Eyes of the Sea', 'Eyes of the Storm', 'Eyes of the Desert', 'Eyes of the Underdark'
   ];
 
+  const characterClass = character?.class || stats.class || 'Artificer';
+  const classConfig = DND_CLASSES[characterClass] || DND_CLASSES.Artificer;
   const tabs = [
     { id: 'main', label: 'Character' },
     { id: 'background', label: 'Background' },
     { id: 'combat', label: 'Combat' },
     { id: 'actions', label: 'Actions' },
-    { id: 'spells', label: 'Spells' },
-    { id: 'infusions', label: 'Infusions' },
+    ...(classConfig.spellcaster ? [{ id: 'spells', label: 'Spells' }] : []),
+    ...(characterClass === 'Artificer' ? [{ id: 'infusions', label: 'Infusions' }] : []),
     { id: 'skills', label: 'Skills' },
     { id: 'inventory', label: 'Inventory' },
     { id: 'features', label: 'Features' },
@@ -439,10 +444,27 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     updateTempHP((Number(stats.tempHP) || 0) + amount);
   };
 
+  const openRestPreview = (type) => {
+    setRestPreview({
+      type,
+      changes: previewRestChanges({ stats, conditions: activeConditions, type })
+    });
+  };
+
+  const confirmRest = () => {
+    if (!restPreview) return;
+    const newStats = applyRest({ stats, type: restPreview.type });
+    setStats(newStats);
+    updateCharacterData({ stats: newStats });
+    setRestPreview(null);
+  };
+
   const getModifier = (stat) => {
     const parsedStat = parseInt(stat) || 10;
     return Math.floor((parsedStat - 10) / 2);
   };
+
+  const derivedStats = getDerivedStats(stats, character);
 
   const getLevelTitle = (level, characterClass) => {
     if (!level || !characterClass) return '';
@@ -477,7 +499,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
   const renderMainTab = () => {
     const characterClass = character?.class || stats.class || 'Artificer';
     const strMod = getModifier(parseInt(stats.strength) || 10);
-    const dexMod = getModifier(parseInt(stats.dexterity) || 10);
+    const dexMod = derivedStats.initiative;
     
     return (
       <div className="character-overview min-h-screen p-4">
@@ -542,7 +564,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                                     ability === 'strength' ? 'STR' : 
                                     ability === 'wisdom' ? 'WIS' : ability;
                   const value = parseInt(stats[ability]) || 10;
-                  const modifier = getModifier(value) + (savingThrowProficiencies[ability] ? (stats.proficiencyBonus || 2) : 0);
+                  const modifier = getModifier(value) + (savingThrowProficiencies[ability] ? derivedStats.proficiencyBonus : 0);
                   return (
                     <div key={ability} className="save-row">
                       <span className={`save-dot ${savingThrowProficiencies[ability] ? 'is-proficient' : ''}`} />
@@ -678,14 +700,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                   </div>
                   <div className="combat-stat-label">Armor Class</div>
                   <div className="combat-stat-value">
-                    {(() => {
-                      if (characterClass === 'Barbarian') {
-                        const dexMod = getModifier(parseInt(stats.dexterity) || 10);
-                        const conMod = getModifier(parseInt(stats.constitution) || 10);
-                        return 10 + dexMod + conMod;
-                      }
-                      return stats.armorClass || 10;
-                    })()}
+                    {derivedStats.armorClass}
                   </div>
                 </div>
                 
@@ -1449,11 +1464,9 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
 
   const renderSpellsTab = () => {
     const characterClass = character?.class || stats.class || 'Artificer';
+    const canCastSpells = Boolean((DND_CLASSES[characterClass] || DND_CLASSES.Artificer).spellcaster);
     
-    // Check if this class can cast spells
-    const spellcastingClasses = ['Artificer', 'Wizard', 'Cleric', 'Druid', 'Sorcerer', 'Warlock', 'Bard', 'Paladin', 'Ranger'];
-    
-    if (!spellcastingClasses.includes(characterClass)) {
+    if (!canCastSpells) {
       return (
         <div className="text-center parchment-text-light py-16">
           <div className="sheet-empty-icon"><SheetIcon name="attack" /></div>
@@ -1701,9 +1714,9 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
       case 'actions':
         return renderActionsTab();
       case 'spells':
-        return renderSpellsTab();
+        return classConfig.spellcaster ? renderSpellsTab() : renderMainTab();
       case 'infusions':
-        return renderInfusionsTab();
+        return characterClass === 'Artificer' ? renderInfusionsTab() : renderMainTab();
       case 'skills':
         return renderSkillsTab();
       case 'inventory':
@@ -1806,10 +1819,10 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                   className="level-stepper"
                 >+</button>
               </div>
-              <button className="rest-button short-rest">
+              <button className="rest-button short-rest" onClick={() => openRestPreview('short')}>
                 Short Rest
               </button>
-              <button className="rest-button long-rest">
+              <button className="rest-button long-rest" onClick={() => openRestPreview('long')}>
                 Long Rest
               </button>
             </div>
@@ -1837,10 +1850,40 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
         </div>
         
         {/* Three-column content area */}
-        <div className="sheet-content p-6">
+      <div className="sheet-content p-6">
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Rest Preview Modal */}
+      {restPreview && (
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50">
+          <div className="sheet-panel p-6 rounded-xl shadow-2xl w-full max-w-md">
+            <h2 className="sheet-title">
+              {restPreview.type === 'long' ? 'Long Rest Preview' : 'Short Rest Preview'}
+            </h2>
+            <div className="rest-preview-list">
+              {restPreview.changes.map((change, index) => (
+                <div key={index} className="rest-preview-row">{change}</div>
+              ))}
+            </div>
+            <div className="flex justify-end space-x-2 mt-6">
+              <button
+                className="action-button secondary"
+                onClick={() => setRestPreview(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="action-button primary"
+                onClick={confirmRest}
+              >
+                Apply Rest
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* HP Modal */}
       {hpModalOpen && (

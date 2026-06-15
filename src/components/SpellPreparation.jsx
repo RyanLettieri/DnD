@@ -5,6 +5,7 @@ import { ARTIFICER_CANTRIPS, ARTIFICER_SPELLS, SPELL_DETAILS } from '../data/spe
 const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }) => {
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [showSpellDetails, setShowSpellDetails] = useState(null);
+  const [spellSearch, setSpellSearch] = useState('');
 
   // Calculate spells known and prepared based on level
   const getSpellsKnown = () => {
@@ -118,12 +119,14 @@ const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }
 
   const getAvailableSpellsForLevel = (spellLevel) => {
     if (spellLevel === 0) {
-      return ARTIFICER_CANTRIPS;
+      return ARTIFICER_CANTRIPS.filter(spell => spell.toLowerCase().includes(spellSearch.toLowerCase()));
     }
     // Remove any duplicates that might exist
     const spells = ARTIFICER_SPELLS[spellLevel] || [];
-    return [...new Set(spells)];
+    return [...new Set(spells)].filter(spell => spell.toLowerCase().includes(spellSearch.toLowerCase()));
   };
+
+  const visibleSpells = getAvailableSpellsForLevel(selectedLevel);
 
   return (
     <Card>
@@ -153,19 +156,28 @@ const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }
           </div>
 
           {/* Control Buttons */}
-          <div className="flex space-x-2">
+          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+            <input
+              type="search"
+              value={spellSearch}
+              onChange={(e) => setSpellSearch(e.target.value)}
+              placeholder="Search spells..."
+              className="sheet-input flex-1"
+            />
+            <div className="flex space-x-2">
             <button
               onClick={autoPrepareSpells}
-              className="bg-artificerBlue/80 hover:bg-artificerBlue text-white px-4 py-2 rounded text-sm button-glow"
+              className="action-button primary"
             >
               Auto-Prepare
             </button>
             <button
               onClick={resetPreparedSpells}
-              className="bg-sealWax/80 hover:bg-sealWax text-white px-4 py-2 rounded text-sm button-glow"
+              className="action-button danger"
             >
               Clear All
             </button>
+            </div>
           </div>
 
           {/* Level Tabs */}
@@ -198,7 +210,7 @@ const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }
           {/* Spell List */}
           <div className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {getAvailableSpellsForLevel(selectedLevel).map(spell => (
+              {visibleSpells.map(spell => (
                 <div
                   key={spell}
                   className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer ${
@@ -217,6 +229,7 @@ const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }
                         className="w-4 h-4 accent-artificerBronze"
                       />
                       <span className="parchment-text font-semibold">{spell}</span>
+                      <span className="sheet-row-pill">{selectedLevel === 0 ? 'Known' : isSpellPrepared(spell, selectedLevel) ? 'Prepared' : 'Known'}</span>
                       {selectedLevel > 0 && (
                         <span className="parchment-text-light text-xs">Lv.{selectedLevel}</span>
                       )}
@@ -246,6 +259,11 @@ const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }
                   )}
                 </div>
               ))}
+              {visibleSpells.length === 0 && (
+                <div className="empty-state col-span-full">
+                  No spells match your search. Try a different name or switch spell levels.
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
+import { Theater } from 'lucide-react';
 import CharacterCard from './CharacterCard';
 import CreateCharacterModal from './CreateCharacterModal';
 import Card from './Card';
 
 const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, onEditCharacter, onDeleteCharacter }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCharacter, setEditingCharacter] = useState(null);
 
   const handleCreateCharacter = (characterData) => {
     onCreateCharacter(characterData);
+  };
+
+  const handleUpdateCharacter = (characterId, characterData) => {
+    onEditCharacter(characterId, characterData);
+    setEditingCharacter(null);
   };
 
   const handleDeleteCharacter = (character) => {
@@ -55,7 +62,7 @@ const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, 
               key={character.id}
               character={character}
               onSelect={onSelectCharacter}
-              onEdit={onEditCharacter}
+              onEdit={(selectedCharacter) => setEditingCharacter(selectedCharacter)}
               onDelete={handleDeleteCharacter}
             />
           ))}
@@ -65,7 +72,9 @@ const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, 
         <Card className="max-w-2xl mx-auto">
           <Card.Content>
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">🎭</div>
+              <div className="flex justify-center mb-4 text-[#8B4513]">
+                <Theater size={54} strokeWidth={1.7} />
+              </div>
               <h3 className="text-xl font-bold parchment-text mb-2">
                 No Characters Yet
               </h3>
@@ -88,6 +97,14 @@ const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, 
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreate={handleCreateCharacter}
+      />
+
+      <CreateCharacterModal
+        isOpen={Boolean(editingCharacter)}
+        initialCharacter={editingCharacter}
+        onClose={() => setEditingCharacter(null)}
+        onCreate={handleCreateCharacter}
+        onUpdate={handleUpdateCharacter}
       />
     </div>
   );
