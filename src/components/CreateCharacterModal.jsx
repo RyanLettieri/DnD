@@ -16,6 +16,7 @@ const emptyCharacterForm = {
   name: '',
   class: 'Artificer',
   subclass: '',
+  classSkills: [],
   level: 1,
   combatStats: { maxHP: '', currentHP: '', tempHP: 0, armorClass: '', speed: 30, initiative: 0 },
   race: 'Human',
@@ -70,6 +71,7 @@ const createFormFromCharacter = (character) => {
     name: character.name || character.stats?.characterName || '',
     class: character.class || character.stats?.class || 'Artificer',
     subclass: character.subclass || '',
+    classSkills: character.classSkills || [],
     combatStats: {
       maxHP: character.stats?.MaxHP ?? '',
       currentHP: character.stats?.HP ?? '',
@@ -291,6 +293,19 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate, onUpdate, initialChar
                   </label>
                 )}
 
+                {selectedClass.skillChoices?.length > 0 && (
+                  <div className="creator-field is-wide">
+                    <span>Class Skill Choices (choose {selectedClass.skillChoiceCount || 2})</span>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                      {selectedClass.skillChoices.map(skill => (
+                        <label key={skill} className="flex items-center gap-2 text-sm">
+                          <input type="checkbox" checked={(characterData.classSkills || []).includes(skill)} disabled={!(characterData.classSkills || []).includes(skill) && (characterData.classSkills || []).length >= (selectedClass.skillChoiceCount || 2)} onChange={e => updateField('classSkills', e.target.checked ? [...(characterData.classSkills || []), skill] : (characterData.classSkills || []).filter(x => x !== skill))} />
+                          {skill}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <label className="creator-field">
                   <span>Race / Lineage</span>
                   <select value={characterData.race} onChange={(e) => updateField('race', e.target.value)}>
