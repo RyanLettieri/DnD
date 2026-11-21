@@ -10,12 +10,12 @@ Grapevine:{passive:"Five one-use healing grapes.",active:"Deliver grape: Bonus A
 };
 export default function ConfectionerBrigade({characterId,level=3,proficiencyBonus=2,intelligence=10,spellSaveDC=13,spellAttack=5,spellSlots={},onUpdateSpellSlots=()=>{}}){
  const key="character_"+characterId+"_confectionerBrigade";
- const [data,setData]=usePersistentState(key,{golems:[],sharedHP:maxHP,sharedTempHP:0,commands:[],grandBanquet:false,banquetUsed:false,bonusApplied:false});
- const [draft,setDraft]=useState({name:"",recipe:"Guardian",size:"Small",position:"",notes:""});
- const [amount,setAmount]=useState(0),[seasoning,setSeasoning]=useState(""),[slot,setSlot]=useState("1");
  const pb=Number(proficiencyBonus)||2,intMod=Math.floor((Number(intelligence)-10)/2);
  const max=level>=14?5:level>=10?4:3;
  const maxHP=level>=10?6*level:5+5*level;
+ const [data,setData]=usePersistentState(key,{golems:[],sharedHP:maxHP,sharedTempHP:0,commands:[],grandBanquet:false,banquetUsed:false,bonusApplied:false});
+ const [draft,setDraft]=useState({name:"",recipe:"Guardian",size:"Small",position:"",notes:""});
+ const [amount,setAmount]=useState(0),[seasoning,setSeasoning]=useState(""),[slot,setSlot]=useState("1");
  const ac=13+pb;
  const update=(id,patch)=>setData(p=>({...p,golems:p.golems.map(g=>g.id===id?{...g,...patch}:g)}));
  const create=()=>{if(data.golems.length>=max)return;const g={id:Date.now()+Math.random(),name:draft.name.trim()||draft.recipe,recipe:draft.recipe,size:draft.size,position:draft.position,notes:draft.notes,conditions:"",grapes:draft.recipe==="Grapevine"?5:0};setData(p=>({...p,golems:[...p.golems,g],sharedHP:p.sharedHP}));setDraft({name:"",recipe:"Guardian",size:"Small",position:"",notes:""});};
