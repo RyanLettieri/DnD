@@ -1745,7 +1745,6 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
         ) : characterClass === 'Artificer' ? (
           <FeaturesTracker />
         ) : null}
-        {characterClass === 'Culinarian' ? <CulinarianClassFeatures characterId={characterId} level={stats.level} subclass={character?.subclass || ''} proficiencyBonus={stats.proficiencyBonus} intelligence={stats.intelligence} spellSlots={stats.spellSlots || {}} onUpdateSpellSlots={(newSpellSlots) => setStats(prev => ({ ...prev, spellSlots: newSpellSlots }))} /> : null}
         <CharacterFeaturesEditor characterId={characterId} level={stats.level} />
         
         <SavingThrows 
