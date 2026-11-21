@@ -246,6 +246,23 @@ export const DND_CLASSES = {
     spellcaster: true,
     description: 'Magical inventor who blends arcane craft with practical tools.'
   },
+  Culinarian: {
+    hitDiceSize: 8,
+    primaryAbilities: ['intelligence', 'constitution'],
+    savingThrows: ['constitution', 'intelligence'],
+    defaultSkills: ['Arcana', 'Nature'],
+    equipment: [
+      { name: "Chef's Knife", quantity: 1, description: "Simple melee weapon" },
+      { name: "Leather Armor", quantity: 1, description: "Light armor" },
+      { name: "Cook's Utensils", quantity: 1, description: "Required culinary tools" },
+      { name: "Explorer's Pack", quantity: 1, description: "Contains various adventuring gear" }
+    ],
+    tools: ["Cook's Utensils"],
+    spellcaster: true,
+    spellcastingProgression: 'full',
+    spellcastingAbility: 'intelligence',
+    description: 'An Intelligence-based magical chef who prepares recipes as spells and channels magic through culinary craft.'
+  },
   Barbarian: {
     hitDiceSize: 12,
     primaryAbilities: ['strength', 'constitution'],
