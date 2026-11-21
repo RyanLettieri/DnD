@@ -97,7 +97,7 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate, onUpdate, initialChar
     }
   }, [initialCharacter, isOpen]);
 
-  const selectedClass = DND_CLASSES[characterData.class] || DND_CLASSES.Artificer;
+  const selectedClass = DND_CLASSES[characterData.class] || { hitDiceSize: 8, primaryAbilities: [], savingThrows: [], spellcaster: false, description: 'Unrecognized class.' };
   const selectedRace = DND_RACE_DETAILS[characterData.race] || DND_RACE_DETAILS['Custom Lineage'];
   const selectedBackground = DND_BACKGROUND_DETAILS[characterData.background] || DND_BACKGROUND_DETAILS.Custom;
 
