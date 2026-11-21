@@ -375,6 +375,7 @@ export default function App() {
         name: characterData.name,
         class: characterData.class,
         subclass: characterData.subclass || '',
+        classSkills: characterData.classSkills || [],
         level: stats.level,
         race: characterData.race,
         background: characterData.background,
@@ -390,7 +391,7 @@ export default function App() {
         stats,
         proficiencies: characterData.class === existingCharacter.class
           ? existingCharacter.proficiencies
-          : buildProficiencies(characterData.class),
+          : buildProficiencies(characterData.class, characterData.classSkills || []),
         savingThrows: characterData.class === existingCharacter.class
           ? existingCharacter.savingThrows
           : buildSavingThrows(characterData.class),
