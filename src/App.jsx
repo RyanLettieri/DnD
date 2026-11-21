@@ -106,7 +106,11 @@ const buildStats = (characterData, previousStats = {}) => {
     [ability]: Number(characterData.abilities?.[ability] ?? previousStats[ability] ?? 10) || 10
   }), {});
   const conMod = getAbilityModifier(abilities.constitution);
-  const maxHP = Math.max(1, Number(previousStats.MaxHP) || classConfig.hitDiceSize + conMod);
+  // Average hit-point progression is used only as a starting estimate. Players can
+  // enter their exact rolled/manual HP values in character creation or the sheet.
+  const estimatedMaxHP = classConfig.hitDiceSize + conMod
+    + Math.max(0, level - 1) * (Math.floor(classConfig.hitDiceSize / 2) + 1 + conMod);
+  const maxHP = Math.max(1, Number(previousStats.MaxHP) || estimatedMaxHP);
   const unarmoredAC = 10 + getAbilityModifier(abilities.dexterity);
 
   return {
