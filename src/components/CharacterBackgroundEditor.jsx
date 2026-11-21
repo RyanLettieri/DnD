@@ -1,0 +1,9 @@
+import React from 'react';
+import Card from './Card';
+import usePersistentState from '../hooks/usePersistentState';
+export default function CharacterBackgroundEditor({characterId,character={}}){
+ const [bg,setBg]=usePersistentState("character_"+characterId+"_backgroundDetails",{name:character.background||"Custom",skills:"",tools:"",languages:"",equipment:"",featureName:"",featureDescription:"",traits:character.personalityTraits||"",ideals:character.ideals||"",bonds:character.bonds||"",flaws:character.flaws||"",story:character.backstory||""});
+ const set=(k,v)=>setBg(p=>({...p,[k]:v}));
+ const fields=[["name","Background name"],["skills","Skill proficiencies"],["tools","Tool proficiencies"],["languages","Languages"],["equipment","Equipment"],["featureName","Background feature name"]];
+ return <div className="space-y-5"><Card><Card.Header>Edit Background</Card.Header><Card.Content><div className="grid md:grid-cols-2 gap-3">{fields.map(([k,label])=><label key={k} className="text-sm">{label}<input className="sheet-input w-full mt-1" value={bg[k]||""} onChange={e=>set(k,e.target.value)}/></label>)}</div><label className="block text-sm mt-3">Background feature description<textarea className="sheet-input w-full mt-1" rows="4" value={bg.featureDescription||""} onChange={e=>set("featureDescription",e.target.value)}/></label></Card.Content></Card><Card><Card.Header>Personality & Story</Card.Header><Card.Content><div className="grid md:grid-cols-2 gap-3">{[["traits","Personality Traits"],["ideals","Ideals"],["bonds","Bonds"],["flaws","Flaws"]].map(([k,l])=><label key={k} className="text-sm">{l}<textarea className="sheet-input w-full mt-1" rows="3" value={bg[k]||""} onChange={e=>set(k,e.target.value)}/></label>)}</div><label className="block text-sm mt-3">Backstory & origin notes<textarea className="sheet-input w-full mt-1" rows="6" value={bg.story||""} onChange={e=>set("story",e.target.value)}/></label></Card.Content></Card></div>;
+}
