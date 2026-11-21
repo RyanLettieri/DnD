@@ -247,21 +247,30 @@ export const DND_CLASSES = {
     description: 'Magical inventor who blends arcane craft with practical tools.'
   },
   Culinarian: {
+    // Confirmed with the DM: d8 Hit Die, Intelligence spellcasting, full-caster slots,
+    // Cook's Utensils proficiency, and light/medium armor proficiency.
     hitDiceSize: 8,
-    primaryAbilities: ['intelligence', 'constitution'],
-    savingThrows: ['constitution', 'intelligence'],
-    defaultSkills: ['Arcana', 'Nature'],
-    equipment: [
-      { name: "Chef's Knife", quantity: 1, description: "Simple melee weapon" },
-      { name: "Leather Armor", quantity: 1, description: "Light armor" },
-      { name: "Cook's Utensils", quantity: 1, description: "Required culinary tools" },
-      { name: "Explorer's Pack", quantity: 1, description: "Contains various adventuring gear" }
-    ],
+    primaryAbilities: ['intelligence'],
+    savingThrows: [],
+    defaultSkills: [],
+    equipment: [],
     tools: ["Cook's Utensils"],
+    armorProficiencies: ['Light Armor', 'Medium Armor'],
+    weaponProficiencies: [],
+    subclasses: ['Confectioner'],
     spellcaster: true,
     spellcastingProgression: 'full',
     spellcastingAbility: 'intelligence',
-    description: 'An Intelligence-based magical chef who prepares recipes as spells and channels magic through culinary craft.'
+    description: 'An Intelligence-based magical chef who prepares recipes as spells and channels magic through culinary craft.',
+    dmConfirmationRequired: [
+      'Saving throw proficiencies',
+      'Class skill choices and number of skills',
+      'Starting equipment and weapon proficiencies',
+      'Full base-class feature progression (levels 1–20)',
+      'Recipe learning, preparation, and known/prepared limits',
+      'Spellcasting focus and ritual-casting rules, if any',
+      'Subclass selection timing and any additional subclasses'
+    ]
   },
   Barbarian: {
     hitDiceSize: 12,
