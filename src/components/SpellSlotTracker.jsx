@@ -107,7 +107,7 @@ const SpellSlotTracker = ({ spellSlots, onUpdateSpellSlots, level, intelligence,
             {Object.keys(availableSlots).map(spellLevel => {
               const levelNum = parseInt(spellLevel);
               const maxSlots = availableSlots[levelNum];
-              const currentSlots = spellSlots[levelNum] || Array(maxSlots).fill(false);
+              const currentSlots = (spellSlots[levelNum] || Array(maxSlots).fill(false)).slice(0, maxSlots);
               const usedSlots = currentSlots.filter(slot => slot).length;
               
               return (
