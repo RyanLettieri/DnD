@@ -39,6 +39,7 @@ import FeaturesTracker from './FeaturesTracker';
 import SpellPreparation from './SpellPreparation';
 import InfusionsTracker from './InfusionsTracker';
 import CulinarianFeatures from './CulinarianFeatures';
+import CulinarianClassFeatures from './CulinarianClassFeatures';
 import EnhancedActions from './EnhancedActions';
 import EnhancedNotes from './EnhancedNotes';
 import DeathSavingThrows from './DeathSavingThrows';
@@ -1654,6 +1655,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
       intelligence={stats.intelligence}
       spellSlots={stats.spellSlots || {}}
       onUpdateSpellSlots={(newSpellSlots) => setStats(prev => ({ ...prev, spellSlots: newSpellSlots }))}
+      subclass={character?.subclass || ''}
     />
   );
 
@@ -1878,7 +1880,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
                   style={{ fontFamily: 'Cinzel, serif' }}
                 />
                 <div className="sheet-subtitle mt-1">
-                  {character?.class} • Level {stats.level} • {character?.race || 'Race not specified'}
+                  {character?.class}{character?.subclass ? ` (${character.subclass})` : ''} • Level {stats.level} • {character?.race || 'Race not specified'}
                 </div>
                 <div className="sheet-epithet">
                   {getLevelTitle(stats.level, character?.class)}
