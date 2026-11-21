@@ -15,7 +15,9 @@ import {
 const emptyCharacterForm = {
   name: '',
   class: 'Artificer',
+  subclass: '',
   level: 1,
+  combatStats: { maxHP: '', currentHP: '', tempHP: 0, armorClass: '', speed: 30, initiative: 0 },
   race: 'Human',
   background: 'Custom',
   alignment: 'True Neutral',
@@ -67,6 +69,15 @@ const createFormFromCharacter = (character) => {
     ...emptyCharacterForm,
     name: character.name || character.stats?.characterName || '',
     class: character.class || character.stats?.class || 'Artificer',
+    subclass: character.subclass || '',
+    combatStats: {
+      maxHP: character.stats?.MaxHP ?? '',
+      currentHP: character.stats?.HP ?? '',
+      tempHP: character.stats?.tempHP ?? 0,
+      armorClass: character.stats?.armorClass ?? '',
+      speed: character.stats?.speed ?? 30,
+      initiative: character.stats?.initiative ?? 0
+    },
     level: character.level || character.stats?.level || 1,
     race: normalizeSelectValue(character.race, DND_RACES, 'Custom Lineage'),
     background: normalizeSelectValue(character.background, DND_BACKGROUNDS, 'Custom'),
@@ -146,7 +157,18 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate, onUpdate, initialChar
   };
 
   const updateField = (field, value) => {
-    setCharacterData(prev => ({ ...prev, [field]: value }));
+    setCharacterData(prev => ({
+      ...prev,
+      [field]: value,
+      ...(field === 'class' ? { subclass: '' } : {})
+    }));
+  };
+
+  const updateCombatStat = (field, value) => {
+    setCharacterData(prev => ({
+      ...prev,
+      combatStats: { ...prev.combatStats, [field]: value }
+    }));
   };
 
   const updateAbility = (ability, value) => {
@@ -259,6 +281,16 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate, onUpdate, initialChar
                   </select>
                 </label>
 
+                {selectedClass.subclasses?.length > 0 && (
+                  <label className="creator-field">
+                    <span>Subclass</span>
+                    <select value={characterData.subclass} onChange={(e) => updateField('subclass', e.target.value)}>
+                      <option value="">Choose later</option>
+                      {selectedClass.subclasses.map(subclass => <option key={subclass} value={subclass}>{subclass}</option>)}
+                    </select>
+                  </label>
+                )}
+
                 <label className="creator-field">
                   <span>Race / Lineage</span>
                   <select value={characterData.race} onChange={(e) => updateField('race', e.target.value)}>
@@ -280,10 +312,20 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate, onUpdate, initialChar
                   <p>{selectedClass.description}</p>
                   <div>
                     <span>Hit Die d{selectedClass.hitDiceSize}</span>
-                    <span>Primary: {(selectedClass.primaryAbilities || []).map(a => ABILITY_LABELS[a]).join(', ')}</span>
-                    <span>Saves: {(selectedClass.savingThrows || []).map(a => ABILITY_LABELS[a]).join(', ')}</span>
+                    <span>Primary: {(selectedClass.primaryAbilities || []).map(a => ABILITY_LABELS[a]).join(', ') || 'DM confirmation needed'}</span>
+                    <span>Saves: {(selectedClass.savingThrows || []).map(a => ABILITY_LABELS[a]).join(', ') || 'DM confirmation needed'}</span>
                     <span>{selectedClass.spellcaster ? 'Spellcasting' : 'No base spellcasting'}</span>
+                    {selectedClass.armorProficiencies?.map(item => <span key={item}>{item}</span>)}
+                    {selectedClass.tools?.map(item => <span key={item}>{item}</span>)}
                   </div>
+                  {selectedClass.dmConfirmationRequired?.length > 0 && (
+                    <div className="mt-3 rounded border border-amber-500/40 bg-amber-500/10 p-3">
+                      <strong className="text-sm">DM details still needed</strong>
+                      <ul className="list-disc pl-5 text-xs mt-1 space-y-1">
+                        {selectedClass.dmConfirmationRequired.map(item => <li key={item}>{item}</li>)}
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 <div className="creator-option-summary">
@@ -329,6 +371,27 @@ const CreateCharacterModal = ({ isOpen, onClose, onCreate, onUpdate, initialChar
                     {(selectedClass.primaryAbilities || []).includes(ability) && <em>Primary</em>}
                   </label>
                 ))}
+              </div>
+
+              <div className="creator-combat-fields">
+                <h3>Starting Combat Stats (optional)</h3>
+                <p>Enter existing values from another character if you want to carry them over. Leave blank to use calculated/default values.</p>
+                <div className="creator-ability-grid">
+                  {[
+                    ['maxHP', 'Maximum HP'], ['currentHP', 'Current HP'], ['tempHP', 'Temporary HP'],
+                    ['armorClass', 'Armor Class'], ['speed', 'Speed'], ['initiative', 'Initiative bonus']
+                  ].map(([field, label]) => (
+                    <label className="creator-ability-card" key={field}>
+                      <span>{label}</span>
+                      <input
+                        type="number"
+                        min={field === 'initiative' ? -10 : 0}
+                        value={characterData.combatStats?.[field] ?? ''}
+                        onChange={(e) => updateCombatStat(field, e.target.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="creator-help-text">
