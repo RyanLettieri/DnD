@@ -119,11 +119,16 @@ const buildStats = (characterData, previousStats = {}) => {
     race: characterData.race,
     proficiencyBonus: getProficiencyBonus(level),
     hitDiceSize: classConfig.hitDiceSize,
-    armorClass: characterData.class === 'Barbarian'
-      ? 10 + getAbilityModifier(abilities.dexterity) + getAbilityModifier(abilities.constitution)
-      : Number(previousStats.armorClass) || (characterData.race === 'Tortle' ? 17 : unarmoredAC),
-    HP: Math.min(Number(previousStats.HP) || maxHP, maxHP),
-    MaxHP: maxHP
+    armorClass: Number(characterData.combatStats?.armorClass) || Number(previousStats.armorClass) || (characterData.race === 'Tortle' ? 17 : characterData.class === 'Barbarian' ? 10 + getAbilityModifier(abilities.dexterity) + getAbilityModifier(abilities.constitution) : unarmoredAC),
+    HP: characterData.combatStats?.currentHP !== '' && characterData.combatStats?.currentHP != null
+      ? Math.max(0, Number(characterData.combatStats.currentHP) || 0)
+      : Math.min(Number(previousStats.HP) || maxHP, maxHP),
+    MaxHP: characterData.combatStats?.maxHP !== '' && characterData.combatStats?.maxHP != null
+      ? Math.max(1, Number(characterData.combatStats.maxHP) || maxHP)
+      : maxHP,
+    tempHP: Math.max(0, Number(characterData.combatStats?.tempHP ?? previousStats.tempHP) || 0),
+    speed: Math.max(0, Number(characterData.combatStats?.speed) || Number(previousStats.speed) || 30),
+    initiative: Number(characterData.combatStats?.initiative ?? previousStats.initiative) || 0
   };
 };
 
@@ -287,6 +292,7 @@ export default function App() {
       id: characterId,
       name: characterData.name,
       class: characterData.class,
+      subclass: characterData.subclass || '',
       level: stats.level,
       race: characterData.race,
       background: characterData.background,
@@ -307,6 +313,8 @@ export default function App() {
       equipment: classConfig.equipment || DEFAULT_EQUIPMENT,
       preparedSpells: {},
       toolProficiencies: classConfig.tools || [],
+      armorProficiencies: classConfig.armorProficiencies || [],
+      weaponProficiencies: classConfig.weaponProficiencies || [],
       languages: ["Common"],
       backgroundScribe: buildBackgroundScribe(characterData)
     };
@@ -361,6 +369,7 @@ export default function App() {
         ...existingCharacter,
         name: characterData.name,
         class: characterData.class,
+        subclass: characterData.subclass || '',
         level: stats.level,
         race: characterData.race,
         background: characterData.background,
@@ -386,6 +395,12 @@ export default function App() {
         toolProficiencies: characterData.class === existingCharacter.class
           ? existingCharacter.toolProficiencies
           : (classConfig.tools || []),
+        armorProficiencies: characterData.class === existingCharacter.class
+          ? existingCharacter.armorProficiencies
+          : (classConfig.armorProficiencies || []),
+        weaponProficiencies: characterData.class === existingCharacter.class
+          ? existingCharacter.weaponProficiencies
+          : (classConfig.weaponProficiencies || []),
         backgroundScribe: buildBackgroundScribe(characterData, existingCharacter.backgroundScribe)
       };
 
