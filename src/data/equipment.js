@@ -4,7 +4,8 @@ export const EQUIPMENT_TYPES = {
   TOOL: 'tool',
   GEAR: 'gear',
   CONTAINER: 'container',
-  FOOD: 'food'
+  FOOD: 'food',
+  POTION: 'potion'
 };
 
 export const DEFAULT_EQUIPMENT = {

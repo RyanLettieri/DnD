@@ -4,7 +4,7 @@ import CharacterCard from './CharacterCard';
 import CreateCharacterModal from './CreateCharacterModal';
 import Card from './Card';
 
-const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, onEditCharacter, onDeleteCharacter }) => {
+const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, onEditCharacter, onDeleteCharacter, darkMode, setDarkMode }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState(null);
 
@@ -30,16 +30,29 @@ const CharacterDashboard = ({ characters, onSelectCharacter, onCreateCharacter, 
   return (
     <div className="min-h-screen p-8">
       {/* Header */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 relative">
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="absolute top-0 right-0 p-3 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform"
+          style={{
+            border: darkMode ? '2px solid rgba(196, 168, 130, 0.3)' : '2px solid rgba(139, 69, 19, 0.2)',
+          }}
+        >
+          {darkMode ? '☀️' : '🌙'}
+        </button>
+        
         <h1 className="text-4xl font-bold mb-2" style={{
           fontFamily: 'Cinzel, serif',
-          color: '#3C2415',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
+          color: darkMode ? '#e8e0d0' : '#3C2415',
+          textShadow: darkMode ? '2px 2px 4px rgba(0, 0, 0, 0.5)' : '2px 2px 4px rgba(0, 0, 0, 0.3)',
           letterSpacing: '0.1em',
         }}>
           CHARACTER DASHBOARD
         </h1>
-        <p className="parchment-text-light">
+        <p className="parchment-text-light" style={{
+          color: darkMode ? '#c4a882' : '#6b3212',
+        }}>
           Select a character to continue, or create a new adventurer
         </p>
       </div>

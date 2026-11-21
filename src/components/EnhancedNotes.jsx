@@ -131,6 +131,54 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
     setCollapsedLocations(all);
   };
 
+  const exportNotes = () => {
+    const notesData = {
+      campaignSessions: sessions,
+      campaignCharacters: characters,
+      campaignLocations: locations,
+      quickNotes: quickNotes,
+      characterBackground: background,
+      exportDate: new Date().toISOString(),
+      characterDataPrefix: characterDataPrefix
+    };
+
+    const dataStr = JSON.stringify(notesData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dnd_notes_backup_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importNotes = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+
+        // Validate the imported data structure
+        if (importedData.campaignSessions) setSessions(importedData.campaignSessions);
+        if (importedData.campaignCharacters) setCharacters(importedData.campaignCharacters);
+        if (importedData.campaignLocations) setLocations(importedData.campaignLocations);
+        if (importedData.quickNotes !== undefined) setQuickNotes(importedData.quickNotes);
+        if (importedData.characterBackground !== undefined) setBackground(importedData.characterBackground);
+
+        alert('Notes imported successfully!');
+      } catch (error) {
+        alert('Error importing notes: Invalid file format');
+        console.error('Import error:', error);
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input
+    event.target.value = '';
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'alive': return 'text-green-600';
@@ -187,7 +235,28 @@ const EnhancedNotes = ({ characterDataPrefix }) => {
 
       {/* Main Notes Tabs */}
       <Card>
-        <Card.Header>Campaign Notes</Card.Header>
+        <Card.Header>
+          <div className="flex items-center justify-between">
+            <span>Campaign Notes</span>
+            <div className="flex gap-2">
+              <button
+                onClick={exportNotes}
+                className="text-sm bg-artificerBronze/80 hover:bg-artificerBronze text-white px-3 py-1 rounded button-glow"
+              >
+                Export Notes
+              </button>
+              <label className="text-sm bg-artificerBlue/80 hover:bg-artificerBlue text-white px-3 py-1 rounded button-glow cursor-pointer">
+                Import Notes
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importNotes}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        </Card.Header>
         <Card.Content>
           <div className="space-y-6">
             {/* Tab Navigation */}

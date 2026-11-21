@@ -2,7 +2,7 @@ import { ABILITY_KEYS, DND_CLASSES } from '../data/characterOptions';
 
 export const getAbilityModifier = (score) => Math.floor(((Number(score) || 10) - 10) / 2);
 
-export const getProficiencyBonus = (level) => Math.ceil((Number(level) || 1) / 4) + 1;
+export const getProficiencyBonus = (level) => Math.floor((Number(level) - 1) / 4) + 2;
 
 export const getClassConfig = (characterClass) => DND_CLASSES[characterClass] || DND_CLASSES.Artificer;
 

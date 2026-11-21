@@ -140,6 +140,16 @@ export default function App() {
   const [characters, setCharacters] = usePersistentState('characters', {});
   const [activeCharacterId, setActiveCharacterId] = usePersistentState('activeCharacterId', null);
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'character'
+  const [darkMode, setDarkMode] = usePersistentState('darkMode', false);
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   // Listen for character data updates from CharacterSheet
   useEffect(() => {
@@ -402,6 +412,8 @@ export default function App() {
         onCreateCharacter={createCharacter}
         onEditCharacter={editCharacter}
         onDeleteCharacter={deleteCharacter}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
       />
     );
   }
@@ -413,6 +425,8 @@ export default function App() {
         characterId={activeCharacterId}
         character={characters[activeCharacterId]}
         onBackToDashboard={backToDashboard}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
       />
     );
   }
@@ -425,6 +439,8 @@ export default function App() {
       onCreateCharacter={createCharacter}
       onEditCharacter={editCharacter}
       onDeleteCharacter={deleteCharacter}
+      darkMode={darkMode}
+      setDarkMode={setDarkMode}
     />
   );
 }

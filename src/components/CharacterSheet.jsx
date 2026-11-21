@@ -44,7 +44,7 @@ import DeathSavingThrows from './DeathSavingThrows';
 import { SPELL_DETAILS } from '../data/spells';
 import { DEFAULT_EQUIPMENT } from '../data/equipment';
 import { DND_CLASSES } from '../data/characterOptions';
-import { applyRest, getDerivedStats, previewRestChanges } from '../utils/characterRules';
+import { applyRest, getDerivedStats, getProficiencyBonus, previewRestChanges } from '../utils/characterRules';
 
 const SheetIcon = ({ name }) => {
   const icons = {
@@ -156,7 +156,7 @@ const SKILL_ABILITIES = {
   "Survival": "wisdom"
 };
 
-const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
+const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, setDarkMode }) => {
   // Character-specific data storage
   const characterDataPrefix = `character_${characterId}`;
   
@@ -218,26 +218,54 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     }
   };
   
-  // Initialize with character data on first load
+  // Initialize with character data on first load (only if localStorage is empty)
   React.useEffect(() => {
     if (character && character.stats) {
-      // Set the data directly in localStorage
-      localStorage.setItem(`${characterDataPrefix}_stats`, JSON.stringify(character.stats));
-      localStorage.setItem(`${characterDataPrefix}_proficiencies`, JSON.stringify(character.proficiencies || {}));
-      localStorage.setItem(`${characterDataPrefix}_savingThrows`, JSON.stringify(character.savingThrows || {}));
-      localStorage.setItem(`${characterDataPrefix}_conditions`, JSON.stringify(character.conditions || []));
-      localStorage.setItem(`${characterDataPrefix}_equipment`, JSON.stringify(character.equipment || DEFAULT_EQUIPMENT));
-      localStorage.setItem(`${characterDataPrefix}_preparedSpells`, JSON.stringify(character.preparedSpells || {}));
-      localStorage.setItem(`${characterDataPrefix}_toolProficiencies`, JSON.stringify(character.toolProficiencies || []));
-      localStorage.setItem(`${characterDataPrefix}_languages`, JSON.stringify(character.languages || []));
-      
-      // Trigger a re-render by forcing state update
-      setStats(character.stats);
-      setProficiencies(character.proficiencies || {});
-      setSavingThrowProficiencies(character.savingThrows || {});
-      setActiveConditions(character.conditions || []);
-      setEquipment(character.equipment || DEFAULT_EQUIPMENT);
-      setPreparedSpells(character.preparedSpells || {});
+      // Only set localStorage values if they don't already exist
+      if (!localStorage.getItem(`${characterDataPrefix}_stats`)) {
+        localStorage.setItem(`${characterDataPrefix}_stats`, JSON.stringify(character.stats));
+      }
+      if (!localStorage.getItem(`${characterDataPrefix}_proficiencies`)) {
+        localStorage.setItem(`${characterDataPrefix}_proficiencies`, JSON.stringify(character.proficiencies || {}));
+      }
+      if (!localStorage.getItem(`${characterDataPrefix}_savingThrows`)) {
+        localStorage.setItem(`${characterDataPrefix}_savingThrows`, JSON.stringify(character.savingThrows || {}));
+      }
+      if (!localStorage.getItem(`${characterDataPrefix}_conditions`)) {
+        localStorage.setItem(`${characterDataPrefix}_conditions`, JSON.stringify(character.conditions || []));
+      }
+      if (!localStorage.getItem(`${characterDataPrefix}_equipment`)) {
+        localStorage.setItem(`${characterDataPrefix}_equipment`, JSON.stringify(character.equipment || DEFAULT_EQUIPMENT));
+      }
+      if (!localStorage.getItem(`${characterDataPrefix}_preparedSpells`)) {
+        localStorage.setItem(`${characterDataPrefix}_preparedSpells`, JSON.stringify(character.preparedSpells || {}));
+      }
+      if (!localStorage.getItem(`${characterDataPrefix}_toolProficiencies`)) {
+        localStorage.setItem(`${characterDataPrefix}_toolProficiencies`, JSON.stringify(character.toolProficiencies || []));
+      }
+      if (!localStorage.getItem(`${characterDataPrefix}_languages`)) {
+        localStorage.setItem(`${characterDataPrefix}_languages`, JSON.stringify(character.languages || []));
+      }
+
+      // Trigger a re-render by forcing state update (only if needed)
+      if (!stats || Object.keys(stats).length === 0) {
+        setStats(character.stats);
+      }
+      if (!proficiencies || Object.keys(proficiencies).length === 0) {
+        setProficiencies(character.proficiencies || {});
+      }
+      if (!savingThrowProficiencies || Object.keys(savingThrowProficiencies).length === 0) {
+        setSavingThrowProficiencies(character.savingThrows || {});
+      }
+      if (!activeConditions || activeConditions.length === 0) {
+        setActiveConditions(character.conditions || []);
+      }
+      if (!equipment || Object.keys(equipment).length === 0) {
+        setEquipment(character.equipment || DEFAULT_EQUIPMENT);
+      }
+      if (!preparedSpells || Object.keys(preparedSpells).length === 0) {
+        setPreparedSpells(character.preparedSpells || {});
+      }
     }
   }, [character, characterDataPrefix]);
 
@@ -251,6 +279,17 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
     }
   }, [stats.spellSlots]);
 
+  // Fix proficiency bonus for existing characters
+  React.useEffect(() => {
+    const correctProficiencyBonus = getProficiencyBonus(stats.level);
+    if (stats.proficiencyBonus !== correctProficiencyBonus) {
+      setStats(prev => ({
+        ...prev,
+        proficiencyBonus: correctProficiencyBonus
+      }));
+    }
+  }, [stats.level]);
+
   // Debug: Monitor stats changes
   React.useEffect(() => {
     console.log('STATS STATE CHANGED:', stats);
@@ -261,6 +300,25 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
   const [hpAction, setHpAction] = useState("damage");
   const [maxHpModalOpen, setMaxHpModalOpen] = useState(false);
   const [newMaxHp, setNewMaxHp] = useState(0);
+
+  // Get scaled damage for cantrips based on character level
+  const getDamageForLevel = (damage, charLevel, spellLevel) => {
+    if (!damage || spellLevel !== 0) return damage;
+
+    // Cantrip damage scaling: 1-4: base, 5-8: +1 die, 9-12: +2 dice, 13-16: +3 dice, 17-20: +4 dice
+    const extraDice = Math.floor((charLevel - 1) / 4);
+    if (extraDice === 0) return damage;
+
+    // Parse damage string (e.g., "1d10 fire" or "2d6 acid")
+    const match = damage.match(/(\d+)d(\d+)\s*(.*)/);
+    if (!match) return damage;
+
+    const baseDice = parseInt(match[1]);
+    const dieSize = parseInt(match[2]);
+    const damageType = match[3];
+
+    return `${baseDice + extraDice}d${dieSize} ${damageType}`.trim();
+  };
   const [activeTab, setActiveTab] = useState('main');
   const [restPreview, setRestPreview] = useState(null);
   
@@ -806,11 +864,12 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                           name: spell,
                           type: 'Cantrip',
                           icon: 'cantrip',
-                          details: SPELL_DETAILS[spell] || {}
+                          details: SPELL_DETAILS[spell] || {},
+                          level: 0
                         });
                       });
                     }
-                    
+
                     // Add prepared spells (levels 1+)
                     for (let level = 1; level <= 9; level++) {
                       if (preparedSpells[level]) {
@@ -819,7 +878,8 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                             name: spell,
                             type: `Level ${level}`,
                             icon: 'spell',
-                            details: SPELL_DETAILS[spell] || {}
+                            details: SPELL_DETAILS[spell] || {},
+                            level: level
                           });
                         });
                       }
@@ -841,7 +901,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                           </div>
                         </div>
                         <div className="attack-damage">
-                          {spell.details.damage ? spell.details.damage : '—'}
+                          {spell.details.damage ? getDamageForLevel(spell.details.damage, stats.level, spell.level) : '—'}
                         </div>
                       </div>
                     ));
@@ -1502,7 +1562,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                   <h3 className="parchment-text font-semibold mb-2">Cantrips</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {preparedSpells[0].map(spell => (
-                      <SpellCard key={spell} spell={spell} details={SPELL_DETAILS[spell]} level={0} />
+                      <SpellCard key={spell} spell={spell} details={SPELL_DETAILS[spell]} level={0} characterLevel={stats.level} />
                     ))}
                   </div>
                 </div>
@@ -1517,7 +1577,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                     <h3 className="parchment-text font-semibold mb-2">Level {level} Spells</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {levelSpells.map(spell => (
-                        <SpellCard key={spell} spell={spell} details={SPELL_DETAILS[spell]} level={level} />
+                        <SpellCard key={spell} spell={spell} details={SPELL_DETAILS[spell]} level={level} characterLevel={stats.level} />
                       ))}
                     </div>
                   </div>
@@ -1791,14 +1851,27 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
 
             {/* Right: Rest Buttons */}
             <div className="sheet-header-actions flex items-center space-x-3">
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:scale-110 transition-transform"
+                style={{
+                  border: darkMode ? '2px solid rgba(196, 168, 130, 0.3)' : '2px solid rgba(139, 69, 19, 0.2)',
+                }}
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+              
               <div className="level-control flex items-center space-x-2 mr-3">
                 <span className="text-sm font-semibold text-[#654321] mr-1">Level</span>
-                <button 
+                <button
                   onClick={() => {
                     const newLevel = Math.max(1, stats.level - 1);
-                    const newStats = { ...stats, level: newLevel };
+                    const newProficiencyBonus = getProficiencyBonus(newLevel);
+                    const newStats = { ...stats, level: newLevel, proficiencyBonus: newProficiencyBonus };
                     setStats(newStats);
-                    updateCharacterData({ 
+                    updateCharacterData({
                       stats: newStats,
                       level: newLevel
                     });
@@ -1806,12 +1879,13 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard }) => {
                   className="level-stepper"
                 >−</button>
                 <span className="level-value">{stats.level}</span>
-                <button 
+                <button
                   onClick={() => {
                     const newLevel = Math.min(20, stats.level + 1);
-                    const newStats = { ...stats, level: newLevel };
+                    const newProficiencyBonus = getProficiencyBonus(newLevel);
+                    const newStats = { ...stats, level: newLevel, proficiencyBonus: newProficiencyBonus };
                     setStats(newStats);
-                    updateCharacterData({ 
+                    updateCharacterData({
                       stats: newStats,
                       level: newLevel
                     });

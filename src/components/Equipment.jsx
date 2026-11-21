@@ -4,6 +4,7 @@ import { EQUIPMENT_TYPES } from '../data/equipment';
 
 const Equipment = ({ equipment, onUpdateEquipment }) => {
   const [equipmentSearch, setEquipmentSearch] = useState('');
+  const [editingItem, setEditingItem] = useState(null);
   const [newItem, setNewItem] = useState({
     name: '',
     type: EQUIPMENT_TYPES.GEAR,
@@ -54,6 +55,45 @@ const Equipment = ({ equipment, onUpdateEquipment }) => {
         }
       });
     }
+  };
+
+  const handleStartEdit = (itemName) => {
+    const item = equipment[itemName];
+    setEditingItem({
+      originalName: itemName,
+      name: itemName,
+      type: item.type,
+      description: item.description,
+      weight: item.weight,
+      quantity: item.quantity
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingItem && editingItem.name) {
+      const { originalName, ...itemData } = editingItem;
+      const { [originalName]: _, ...rest } = equipment;
+
+      onUpdateEquipment({
+        ...rest,
+        [editingItem.name]: {
+          type: itemData.type,
+          description: itemData.description,
+          weight: Number(itemData.weight),
+          quantity: Number(itemData.quantity)
+        }
+      });
+      setEditingItem(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItem(null);
+  };
+
+  const handleDeleteItem = (itemName) => {
+    const { [itemName]: _, ...rest } = equipment;
+    onUpdateEquipment(rest);
   };
 
   const totalWeight = calculateTotalWeight();
@@ -144,7 +184,7 @@ const Equipment = ({ equipment, onUpdateEquipment }) => {
         <div className="space-y-2">
           {equipmentEntries.map(([itemName, details]) => (
             <div key={itemName} className="parchment-card p-4 rounded flex justify-between items-start hover:shadow-md transition-all duration-200">
-              <div>
+              <div className="flex-1">
                 <h3 className="parchment-text font-bold">{itemName}</h3>
                 <p className="parchment-text-light text-sm">{details.description}</p>
                 <p className="parchment-text-light text-sm">
@@ -165,6 +205,20 @@ const Equipment = ({ equipment, onUpdateEquipment }) => {
                 >
                   +
                 </button>
+                <button
+                  onClick={() => handleStartEdit(itemName)}
+                  className="bg-blue-500/80 hover:bg-blue-500 text-white rounded p-2 button-glow"
+                  title="Edit item"
+                >
+                  ✎
+                </button>
+                <button
+                  onClick={() => handleDeleteItem(itemName)}
+                  className="bg-red-500/80 hover:bg-red-500 text-white rounded p-2 button-glow"
+                  title="Delete item"
+                >
+                  ✕
+                </button>
               </div>
             </div>
           ))}
@@ -175,6 +229,78 @@ const Equipment = ({ equipment, onUpdateEquipment }) => {
                 : 'No equipment matches your search.'}
             </div>
           )}
+
+        {/* Edit Item Modal */}
+        {editingItem && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-parchment border-2 border-artificerBronze/50 rounded-lg p-6 max-w-lg w-full mx-4">
+              <h3 className="parchment-text font-bold text-xl mb-4">Edit Item</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input
+                  type="text"
+                  placeholder="Item name"
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                  className="bg-parchment/50 rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                />
+                <select
+                  value={editingItem.type}
+                  onChange={(e) => setEditingItem({ ...editingItem, type: e.target.value })}
+                  className="bg-parchment/50 rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                >
+                  {Object.values(EQUIPMENT_TYPES).map(type => (
+                    <option key={type} value={type} className="bg-parchment parchment-text">
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </option>
+                  ))}
+                </select>
+                <div className="space-y-1">
+                  <label className="parchment-text-light text-sm">Weight (lbs)</label>
+                  <input
+                    type="number"
+                    value={editingItem.weight}
+                    onChange={(e) => setEditingItem({ ...editingItem, weight: e.target.value })}
+                    className="w-full bg-parchment/50 rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="parchment-text-light text-sm">Quantity</label>
+                  <input
+                    type="number"
+                    value={editingItem.quantity}
+                    onChange={(e) => setEditingItem({ ...editingItem, quantity: e.target.value })}
+                    className="w-full bg-parchment/50 rounded p-2 parchment-text border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                    min="1"
+                  />
+                </div>
+                <textarea
+                  placeholder="Description"
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                  className="bg-parchment/50 rounded p-2 parchment-text col-span-2 border border-artificerBronze/30 focus:border-artificerBronze/60 focus:outline-none"
+                  rows="3"
+                />
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={!editingItem.name}
+                  className="flex-1 bg-artificerBronze/80 hover:bg-artificerBronze text-white rounded p-2 disabled:opacity-50 button-glow"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex-1 bg-sealWax/80 hover:bg-sealWax text-white rounded p-2 button-glow"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </Card.Content>
     </Card>

@@ -7,6 +7,25 @@ const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }
   const [showSpellDetails, setShowSpellDetails] = useState(null);
   const [spellSearch, setSpellSearch] = useState('');
 
+  // Get scaled damage for cantrips based on character level
+  const getDamageForLevel = (damage, charLevel, spellLevel) => {
+    if (!damage || spellLevel !== 0) return damage;
+
+    // Cantrip damage scaling: 1-4: base, 5-8: +1 die, 9-12: +2 dice, 13-16: +3 dice, 17-20: +4 dice
+    const extraDice = Math.floor((charLevel - 1) / 4);
+    if (extraDice === 0) return damage;
+
+    // Parse damage string (e.g., "1d10 fire" or "2d6 acid")
+    const match = damage.match(/(\d+)d(\d+)\s*(.*)/);
+    if (!match) return damage;
+
+    const baseDice = parseInt(match[1]);
+    const dieSize = parseInt(match[2]);
+    const damageType = match[3];
+
+    return `${baseDice + extraDice}d${dieSize} ${damageType}`.trim();
+  };
+
   // Calculate spells known and prepared based on level
   const getSpellsKnown = () => {
     const cantripsKnown = Math.min(level + 1, 5); // Artificers get cantrips based on level
@@ -251,7 +270,7 @@ const SpellPreparation = ({ level, onUpdatePreparedSpells, preparedSpells = {} }
                         <div><span className="parchment-text font-semibold">Range:</span> {SPELL_DETAILS[spell].range}</div>
                         <div><span className="parchment-text font-semibold">Duration:</span> {SPELL_DETAILS[spell].duration}</div>
                         {SPELL_DETAILS[spell].damage && (
-                          <div><span className="parchment-text font-semibold">Damage:</span> {SPELL_DETAILS[spell].damage}</div>
+                          <div><span className="parchment-text font-semibold">Damage:</span> {getDamageForLevel(SPELL_DETAILS[spell].damage, level, selectedLevel)}</div>
                         )}
                       </div>
                       <div className="parchment-text-light">{SPELL_DETAILS[spell].description}</div>

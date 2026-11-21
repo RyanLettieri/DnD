@@ -258,10 +258,50 @@
   --sheet-paper-strong: rgba(255, 248, 232, 0.9);
 }
 
+/* Dark Mode Variables */
+.dark {
+  --sheet-ink: #e8e0d0;
+  --sheet-brown: #c4a882;
+  --sheet-copper: #d4a574;
+  --sheet-line: rgba(196, 168, 130, 0.3);
+  --sheet-paper: rgba(45, 40, 35, 0.85);
+  --sheet-paper-strong: rgba(52, 46, 40, 0.9);
+  --paper-grain: url('data:image/svg+xml,%3Csvg width="200" height="200" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cfilter id="grain"%3E%3CfeTurbulence baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3CfeColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"/%3E%3C/filter%3E%3C/defs%3E%3Crect width="100%25" height="100%25" filter="url(%23grain)" opacity="0.08"/%3E%3C/svg%3E');
+  --ink-stain: radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.08) 0%, transparent 40%), radial-gradient(ellipse at bottom right, rgba(255, 255, 255, 0.05) 0%, transparent 35%);
+}
+
 /* Character sheet redesign */
 .character-sheet-shell {
   background-color: #eadcc4;
   font-family: "Cinzel", Georgia, serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.dark .character-sheet-shell {
+  background-color: #1a1815;
+}
+
+/* Main body background for dark mode */
+.dark body {
+  background-color: #0f0e0d;
+  color: #e8e0d0;
+}
+
+.dark .min-h-screen {
+  background-color: #0f0e0d;
+  color: #e8e0d0;
+}
+
+/* Improve base text readability */
+body {
+  color: #2d2416;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.dark body {
+  color: #e8e0d0;
 }
 
 .character-sheet-frame {
@@ -278,6 +318,19 @@
     inset 0 0 70px rgba(118, 67, 27, 0.12),
     0 16px 45px rgba(47, 27, 12, 0.28);
   overflow: hidden;
+}
+
+.dark .character-sheet-frame {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.08), transparent 30%),
+    radial-gradient(circle at 80% 75%, rgba(0, 0, 0, 0.3), transparent 36%),
+    var(--paper-grain),
+    linear-gradient(135deg, #2d2820 0%, #1f1c18 48%, #2a2620 100%);
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  box-shadow:
+    inset 0 0 0 4px rgba(45, 40, 35, 0.55),
+    inset 0 0 70px rgba(0, 0, 0, 0.3),
+    0 16px 45px rgba(0, 0, 0, 0.5);
 }
 
 .character-sheet-frame::before,
@@ -465,6 +518,20 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.64),
     0 9px 24px rgba(79, 47, 20, 0.09);
   color: var(--sheet-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dark .sheet-panel {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.08), transparent 32%),
+    var(--paper-grain),
+    var(--sheet-paper);
+  border: 1px solid rgba(196, 168, 130, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 9px 24px rgba(0, 0, 0, 0.3);
+  color: #e8e0d0;
 }
 
 .sheet-title {
@@ -473,9 +540,13 @@
   gap: 12px;
   color: var(--sheet-ink);
   font-family: "Cinzel", Georgia, serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   margin: 0 0 18px;
+}
+
+.dark .sheet-title {
+  color: #e8e0d0;
 }
 
 .sheet-title::after {
@@ -554,14 +625,24 @@
 .ability-score-name,
 .save-name {
   color: var(--sheet-ink);
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.dark .ability-score-name,
+.dark .save-name {
+  color: #e8e0d0;
 }
 
 .ability-score-value {
   color: var(--sheet-ink);
-  font-size: 23px;
+  font-size: 24px;
   font-weight: 700;
   text-align: right;
+}
+
+.dark .ability-score-value {
+  color: #e8e0d0;
 }
 
 .ability-score-mod {
@@ -571,10 +652,16 @@
   background: #f6e6c9;
   border: 1px solid rgba(144, 92, 43, 0.14);
   color: var(--sheet-brown);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   padding: 5px 10px;
   text-align: center;
+}
+
+.dark .ability-score-mod {
+  background: #3d3528;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  color: #c4a882;
 }
 
 .save-dot {
@@ -659,14 +746,23 @@
 
 .combat-stat-label {
   color: var(--sheet-ink);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
+}
+
+.dark .combat-stat-label {
+  color: #e8e0d0;
 }
 
 .combat-stat-value {
   color: var(--sheet-ink);
-  font-size: 33px;
+  font-size: 36px;
   line-height: 1.1;
+  font-weight: 700;
+}
+
+.dark .combat-stat-value {
+  color: #e8e0d0;
 }
 
 .combat-unit {
@@ -702,14 +798,23 @@
 
 .effect-name {
   color: var(--sheet-ink);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
+}
+
+.dark .effect-name {
+  color: #e8e0d0;
 }
 
 .effect-meta,
 .effect-duration {
   color: var(--sheet-brown);
-  font-size: 12px;
+  font-size: 13px;
+}
+
+.dark .effect-meta,
+.dark .effect-duration {
+  color: #c4a882;
 }
 
 .effect-duration {
@@ -755,14 +860,23 @@
 
 .attack-name {
   color: var(--sheet-ink);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
+}
+
+.dark .attack-name {
+  color: #e8e0d0;
 }
 
 .attack-meta,
 .attack-damage {
   color: var(--sheet-brown);
-  font-size: 13px;
+  font-size: 14px;
+}
+
+.dark .attack-meta,
+.dark .attack-damage {
+  color: #c4a882;
 }
 
 .attack-damage {
@@ -799,13 +913,21 @@
 
 .side-action-name {
   color: var(--sheet-ink);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
+}
+
+.dark .side-action-name {
+  color: #e8e0d0;
 }
 
 .side-action-meta {
   color: var(--sheet-brown);
-  font-size: 12px;
+  font-size: 13px;
+}
+
+.dark .side-action-meta {
+  color: #c4a882;
 }
 
 .remove-link {
@@ -820,8 +942,14 @@
   border: 1px solid rgba(144, 92, 43, 0.24);
   background: rgba(255, 252, 244, 0.8);
   color: var(--sheet-ink);
-  font-size: 13px;
+  font-size: 14px;
   padding: 8px 12px;
+}
+
+.dark .sheet-input {
+  background: rgba(45, 40, 35, 0.8);
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  color: #e8e0d0;
 }
 
 .sheet-add-button {
@@ -829,7 +957,7 @@
   border-radius: 8px;
   background: #8a4317;
   color: #fff8eb;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   padding: 8px 13px;
   white-space: nowrap;
@@ -842,7 +970,14 @@
   background: rgba(255, 246, 226, 0.72);
   color: var(--sheet-brown);
   font-weight: 700;
+  font-size: 14px;
   transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.dark .sheet-ghost-button {
+  background: rgba(45, 40, 35, 0.72);
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  color: #c4a882;
 }
 
 .sheet-ghost-button:hover {
@@ -1048,15 +1183,23 @@
 .sheet-row-title {
   color: var(--sheet-ink);
   font-family: "Cinzel", Georgia, serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
+}
+
+.dark .sheet-row-title {
+  color: #e8e0d0;
 }
 
 .sheet-row-body {
   color: #614026;
   font-family: Georgia, serif;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dark .sheet-row-body {
+  color: #c4a882;
 }
 
 .sheet-row-label {
@@ -1078,9 +1221,13 @@
 .tab-section-title {
   color: var(--sheet-ink);
   font-family: "Cinzel", Georgia, serif;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 10px;
+}
+
+.dark .tab-section-title {
+  color: #e8e0d0;
 }
 
 .quick-roll-button {
@@ -1096,6 +1243,15 @@
 .quick-roll-button:hover {
   background: #fff9ed;
   transform: translateY(-1px);
+}
+
+.dark .quick-roll-button {
+  background: rgba(45, 40, 35, 0.64);
+  border: 1px solid rgba(196, 168, 130, 0.18);
+}
+
+.dark .quick-roll-button:hover {
+  background: rgba(52, 46, 40, 0.8);
 }
 
 .quick-roll-button .text-amber-900 {
@@ -1176,9 +1332,15 @@
   border-radius: 12px;
   background: rgba(255, 250, 242, 0.5);
   color: var(--sheet-brown);
-  font-size: 0.95rem;
+  font-size: 15px;
   padding: 1rem;
   text-align: center;
+}
+
+.dark .empty-state {
+  background: rgba(45, 40, 35, 0.5);
+  border: 1px dashed rgba(196, 168, 130, 0.25);
+  color: #c4a882;
 }
 
 .rest-preview-list {
@@ -1193,6 +1355,13 @@
   background: rgba(255, 250, 242, 0.62);
   color: var(--sheet-ink);
   padding: 0.8rem 0.95rem;
+  font-size: 15px;
+}
+
+.dark .rest-preview-row {
+  background: rgba(45, 40, 35, 0.62);
+  border: 1px solid rgba(196, 168, 130, 0.18);
+  color: #e8e0d0;
 }
 
 .character-creator {
