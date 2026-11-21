@@ -23,7 +23,6 @@ import {
 import usePersistentState from '../hooks/usePersistentState';
 import '../styles/enhancements.css';
 import HitDice from './HitDice';
-import BackgroundScribe from './BackgroundScribe';
 import Card from './Card';
 import ActionCard from './ActionCard';
 import SpellCard from './SpellCard';
@@ -38,7 +37,6 @@ import SpellSlotTracker from './SpellSlotTracker';
 import FeaturesTracker from './FeaturesTracker';
 import SpellPreparation from './SpellPreparation';
 import InfusionsTracker from './InfusionsTracker';
-import CulinarianFeatures from './CulinarianFeatures';
 import CulinarianClassFeatures from './CulinarianClassFeatures';
 import CulinarianSpellbook from './CulinarianSpellbook';
 import CharacterBackgroundEditor from './CharacterBackgroundEditor';
