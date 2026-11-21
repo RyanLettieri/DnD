@@ -39,7 +39,7 @@
 7. Confirm how an area effect hitting multiple golems applies damage once to the shared HP pool.
 8. Confirm whether shared HP at level 10 replaces the level 3 formula with 6 × level.
 9. Confirm whether multiple golems may use the same recipe and whether recipe choices can be changed after creation.
-10. Confirm whether constructs are recreated only after a Long Rest when the shared pool reaches 0, and how Short Rest repair works with a shared pool.
+10. Confirm whether constructs are recreated only after a Long Rest when the shared pool reaches 0.
 11. Confirm whether Grand Banquet's once-per-turn PB bonus applies to damage and temporary HP only, or also actual healing from Grapevine.
 12. Confirm how Bitter seasoning applies to abilities that do not force a saving throw.
 13. Confirm whether two commands at level 10/14 may both receive seasoning and require separate spell slots (current custom design says yes).
