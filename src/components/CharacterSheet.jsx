@@ -1553,6 +1553,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
           level={stats.level}
           intelligence={stats.intelligence}
           proficiencyBonus={stats.proficiencyBonus}
+          progression={classConfig.spellcastingProgression || 'artificer'}
         />
         <Card>
           <Card.Header>Prepared Spells</Card.Header>
