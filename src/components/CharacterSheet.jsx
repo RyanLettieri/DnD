@@ -1526,7 +1526,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
 
   const renderSpellsTab = () => {
     const characterClass = character?.class || stats.class || 'Artificer';
-    const canCastSpells = Boolean((DND_CLASSES[characterClass] || DND_CLASSES.Artificer).spellcaster);
+    const canCastSpells = Boolean(DND_CLASSES[characterClass]?.spellcaster);
     
     if (!canCastSpells) {
       return (
@@ -1540,6 +1540,27 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
       );
     }
     
+    if (characterClass === 'Culinarian') {
+      return (
+        <div className="tab-page space-y-6">
+          <Card>
+            <Card.Header>Culinarian Spellcasting</Card.Header>
+            <Card.Content>
+              <p className="text-sm parchment-text-light">Culinarian recipes are tracked in the Culinary tab rather than the standard Artificer spell catalogue. This page tracks your full-caster spell slots and spellcasting statistics.</p>
+            </Card.Content>
+          </Card>
+          <SpellSlotTracker
+            spellSlots={stats.spellSlots}
+            onUpdateSpellSlots={(newSpellSlots) => setStats({ ...stats, spellSlots: newSpellSlots })}
+            level={stats.level}
+            intelligence={stats.intelligence}
+            proficiencyBonus={stats.proficiencyBonus}
+            progression={classConfig.spellcastingProgression || 'artificer'}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="tab-page space-y-6">
         <SpellPreparation 
