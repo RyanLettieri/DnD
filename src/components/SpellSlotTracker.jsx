@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from './Card';
 
-const SpellSlotTracker = ({ spellSlots, onUpdateSpellSlots, level, intelligence, proficiencyBonus }) => {
+const SpellSlotTracker = ({ spellSlots, onUpdateSpellSlots, level, intelligence, proficiencyBonus, progression = 'artificer' }) => {
   const getSpellSlotsForLevel = (charLevel) => {
     // Artificer spell slot progression
     const slotsByLevel = {
@@ -29,7 +29,22 @@ const SpellSlotTracker = ({ spellSlots, onUpdateSpellSlots, level, intelligence,
     return slotsByLevel[charLevel] || { 1: 0 };
   };
 
-  const availableSlots = getSpellSlotsForLevel(level);
+  const fullCasterSlotsByLevel = {
+    1: { 1: 2 }, 2: { 1: 3 }, 3: { 1: 4, 2: 2 }, 4: { 1: 4, 2: 3 },
+    5: { 1: 4, 2: 3, 3: 2 }, 6: { 1: 4, 2: 3, 3: 3 }, 7: { 1: 4, 2: 3, 3: 3, 4: 1 },
+    8: { 1: 4, 2: 3, 3: 3, 4: 2 }, 9: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 1 },
+    10: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2 }, 11: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 },
+    12: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 }, 13: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 },
+    14: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 }, 15: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
+    16: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
+    17: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1 },
+    18: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 1, 7: 1, 8: 1, 9: 1 },
+    19: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 },
+    20: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 2, 8: 1, 9: 1 }
+  };
+  const availableSlots = progression === 'full'
+    ? (fullCasterSlotsByLevel[Number(level)] || {})
+    : getSpellSlotsForLevel(level);
   const maxSpellLevel = Math.max(...Object.keys(availableSlots).map(Number));
 
   // Spellcasting math (Artificer uses Intelligence)
@@ -92,7 +107,7 @@ const SpellSlotTracker = ({ spellSlots, onUpdateSpellSlots, level, intelligence,
             {Object.keys(availableSlots).map(spellLevel => {
               const levelNum = parseInt(spellLevel);
               const maxSlots = availableSlots[levelNum];
-              const currentSlots = spellSlots[levelNum] || Array(maxSlots).fill(false);
+              const currentSlots = (spellSlots[levelNum] || Array(maxSlots).fill(false)).slice(0, maxSlots);
               const usedSlots = currentSlots.filter(slot => slot).length;
               
               return (

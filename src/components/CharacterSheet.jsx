@@ -23,7 +23,6 @@ import {
 import usePersistentState from '../hooks/usePersistentState';
 import '../styles/enhancements.css';
 import HitDice from './HitDice';
-import BackgroundScribe from './BackgroundScribe';
 import Card from './Card';
 import ActionCard from './ActionCard';
 import SpellCard from './SpellCard';
@@ -38,6 +37,10 @@ import SpellSlotTracker from './SpellSlotTracker';
 import FeaturesTracker from './FeaturesTracker';
 import SpellPreparation from './SpellPreparation';
 import InfusionsTracker from './InfusionsTracker';
+import CulinarianClassFeatures from './CulinarianClassFeatures';
+import CulinarianSpellbook from './CulinarianSpellbook';
+import CharacterBackgroundEditor from './CharacterBackgroundEditor';
+import CharacterFeaturesEditor from './CharacterFeaturesEditor';
 import EnhancedActions from './EnhancedActions';
 import EnhancedNotes from './EnhancedNotes';
 import DeathSavingThrows from './DeathSavingThrows';
@@ -424,7 +427,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
   ];
 
   const characterClass = character?.class || stats.class || 'Artificer';
-  const classConfig = DND_CLASSES[characterClass] || DND_CLASSES.Artificer;
+  const classConfig = DND_CLASSES[characterClass] || { spellcaster: false };
   const tabs = [
     { id: 'main', label: 'Character' },
     { id: 'background', label: 'Background' },
@@ -432,6 +435,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
     { id: 'actions', label: 'Actions' },
     ...(classConfig.spellcaster ? [{ id: 'spells', label: 'Spells' }] : []),
     ...(characterClass === 'Artificer' ? [{ id: 'infusions', label: 'Infusions' }] : []),
+    ...(characterClass === 'Culinarian' ? [{ id: 'culinarian', label: 'Culinary' }] : []),
     { id: 'skills', label: 'Skills' },
     { id: 'inventory', label: 'Inventory' },
     { id: 'features', label: 'Features' },
@@ -1324,30 +1328,11 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
     <EnhancedNotes characterDataPrefix={characterDataPrefix} />
   );
 
-  const renderBackgroundTab = () => {
-    const characterClass = character?.class || stats.class || 'Artificer';
-    
-    if (characterClass !== 'Artificer') {
-      return (
-        <div className="text-center parchment-text-light py-16">
-          <div className="sheet-empty-icon"><SheetIcon name="background" /></div>
-          <h3 className="text-xl font-bold mb-2">No Scribe Background</h3>
-          <p className="text-sm max-w-md mx-auto">
-            The Scribe background is specific to Artificer characters. {characterClass}s have different background options and features.
-          </p>
-        </div>
-      );
-    }
-    
-    return (
-      <div className="tab-page space-y-6">
-        <BackgroundScribe 
-          characterDataPrefix={characterDataPrefix}
-          character={character}
-        />
-      </div>
-    );
-  };
+  const renderBackgroundTab = () => (
+    <div className="tab-page space-y-6">
+      <CharacterBackgroundEditor characterId={characterId} character={character} />
+    </div>
+  );
 
   const renderCombatTab = () => {
     const characterClass = character?.class || stats.class || 'Artificer';
@@ -1524,7 +1509,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
 
   const renderSpellsTab = () => {
     const characterClass = character?.class || stats.class || 'Artificer';
-    const canCastSpells = Boolean((DND_CLASSES[characterClass] || DND_CLASSES.Artificer).spellcaster);
+    const canCastSpells = Boolean(DND_CLASSES[characterClass]?.spellcaster);
     
     if (!canCastSpells) {
       return (
@@ -1538,6 +1523,22 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
       );
     }
     
+    if (characterClass === 'Culinarian') {
+      return (
+        <div className="tab-page space-y-6">
+          <CulinarianSpellbook characterId={characterId} level={stats.level} intelligence={stats.intelligence} />
+          <SpellSlotTracker spellSlots={stats.spellSlots} onUpdateSpellSlots={(newSpellSlots) => setStats(prev => ({ ...prev, spellSlots: newSpellSlots }))} level={stats.level} intelligence={stats.intelligence} proficiencyBonus={stats.proficiencyBonus} progression="full" />
+          <Card><Card.Header>Culinarian Spellcasting Statistics</Card.Header><Card.Content>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              <div><span className="parchment-text-light">Spell Save DC</span><div className="font-bold">{8 + Number(stats.proficiencyBonus || 2) + getModifier(Number(stats.intelligence || 10))}</div></div>
+              <div><span className="parchment-text-light">Spell Attack</span><div className="font-bold">+{Number(stats.proficiencyBonus || 2) + getModifier(Number(stats.intelligence || 10))}</div></div>
+              <div><span className="parchment-text-light">Prepared Limit</span><div className="font-bold">{Math.max(1, Number(stats.level || 1) + getModifier(Number(stats.intelligence || 10)))}</div></div>
+            </div>
+          </Card.Content></Card>
+        </div>
+      );
+    }
+
     return (
       <div className="tab-page space-y-6">
         <SpellPreparation 
@@ -1551,6 +1552,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
           level={stats.level}
           intelligence={stats.intelligence}
           proficiencyBonus={stats.proficiencyBonus}
+          progression={classConfig.spellcastingProgression || 'artificer'}
         />
         <Card>
           <Card.Header>Prepared Spells</Card.Header>
@@ -1621,6 +1623,10 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
       </div>
     );
   };
+
+  const renderCulinarianTab = () => (
+    <CulinarianClassFeatures characterId={characterId} level={stats.level} proficiencyBonus={stats.proficiencyBonus} intelligence={stats.intelligence} spellSlots={stats.spellSlots || {}} onUpdateSpellSlots={(newSpellSlots) => setStats(prev => ({ ...prev, spellSlots: newSpellSlots }))} subclass={character?.subclass || ''} />
+  );
 
   const renderInfusionsTab = () => {
     const characterClass = character?.class || stats.class || 'Artificer';
@@ -1737,6 +1743,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
         ) : characterClass === 'Artificer' ? (
           <FeaturesTracker />
         ) : null}
+        <CharacterFeaturesEditor characterId={characterId} level={stats.level} />
         
         <SavingThrows 
           stats={stats} 
@@ -1777,6 +1784,8 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
         return classConfig.spellcaster ? renderSpellsTab() : renderMainTab();
       case 'infusions':
         return characterClass === 'Artificer' ? renderInfusionsTab() : renderMainTab();
+      case 'culinarian':
+        return characterClass === 'Culinarian' ? renderCulinarianTab() : renderMainTab();
       case 'skills':
         return renderSkillsTab();
       case 'inventory':
@@ -1841,7 +1850,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
                   style={{ fontFamily: 'Cinzel, serif' }}
                 />
                 <div className="sheet-subtitle mt-1">
-                  {character?.class} • Level {stats.level} • {character?.race || 'Race not specified'}
+                  {character?.class}{character?.subclass ? ` (${character.subclass})` : ''} • Level {stats.level} • {character?.race || 'Race not specified'}
                 </div>
                 <div className="sheet-epithet">
                   {getLevelTitle(stats.level, character?.class)}

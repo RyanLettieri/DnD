@@ -246,6 +246,30 @@ export const DND_CLASSES = {
     spellcaster: true,
     description: 'Magical inventor who blends arcane craft with practical tools.'
   },
+  Culinarian: {
+    hitDiceSize: 8,
+    primaryAbilities: ['intelligence'],
+    savingThrows: ['constitution', 'intelligence'],
+    // The handbook says choose two from this list. The creator leaves these for manual selection.
+    defaultSkills: [],
+    skillChoices: ['Arcana', 'Insight', 'Medicine', 'Nature', 'Perception', 'Persuasion', 'Survival'],
+    skillChoiceCount: 2,
+    equipment: [
+      { name: "Leather Armor or Scale Mail (choose one)", quantity: 1, description: "Starting armor choice" },
+      { name: "Simple Weapon (choose one)", quantity: 1, description: "Starting weapon choice" },
+      { name: "Cook's Utensils", quantity: 1, description: "Culinarian tool proficiency" },
+      { name: "Explorer's Pack", quantity: 1, description: "Starting adventuring pack" },
+      { name: "Culinary Grimoire", quantity: 1, description: "Recipe spellbook" }
+    ],
+    tools: ["Cook's Utensils"],
+    armorProficiencies: ['Light Armor', 'Medium Armor'],
+    weaponProficiencies: ['Simple Weapons'],
+    subclasses: ['Flesh Eater', 'Wild Forager', 'Grand Host', 'Alchemical Gourmand', 'Confectioner'],
+    spellcaster: true,
+    spellcastingProgression: 'full',
+    spellcastingAbility: 'intelligence',
+    description: 'A full-caster whose magic is expressed through recipes, food, drink, spices, and culinary preparations.'
+  },
   Barbarian: {
     hitDiceSize: 12,
     primaryAbilities: ['strength', 'constitution'],

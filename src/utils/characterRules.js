@@ -4,7 +4,7 @@ export const getAbilityModifier = (score) => Math.floor(((Number(score) || 10) -
 
 export const getProficiencyBonus = (level) => Math.floor((Number(level) - 1) / 4) + 2;
 
-export const getClassConfig = (characterClass) => DND_CLASSES[characterClass] || DND_CLASSES.Artificer;
+export const getClassConfig = (characterClass) => DND_CLASSES[characterClass] || { hitDiceSize: 8, primaryAbilities: [], savingThrows: [], defaultSkills: [], equipment: [], tools: [], spellcaster: false, description: 'Unrecognized class. Select a supported class to configure its features.' };
 
 export const canBaseClassCastSpells = (characterClass) => Boolean(getClassConfig(characterClass).spellcaster);
 
@@ -22,6 +22,7 @@ export const getSpellcastingAbility = (characterClass) => {
     case 'Warlock':
       return 'charisma';
     case 'Artificer':
+    case 'Culinarian':
     case 'Wizard':
     default:
       return 'intelligence';
@@ -46,7 +47,7 @@ export const getDerivedStats = (stats = {}, character = {}) => {
     ? 10 + modifiers.dexterity + modifiers.constitution
     : Number(stats.armorClass) || (race === 'Tortle' ? 17 : 10 + modifiers.dexterity);
 
-  const spellcastingAbility = getSpellcastingAbility(characterClass);
+  const spellcastingAbility = DND_CLASSES[characterClass]?.spellcastingAbility || getSpellcastingAbility(characterClass);
   const spellcastingModifier = modifiers[spellcastingAbility];
 
   return {
