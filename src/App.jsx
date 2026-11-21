@@ -90,11 +90,11 @@ const buildSavingThrows = (characterClass) => {
   }), {});
 };
 
-const buildProficiencies = (characterClass) => {
+const buildProficiencies = (characterClass, selectedSkills = []) => {
   const classConfig = getClassConfig(characterClass);
   return Object.keys(DEFAULT_PROFICIENCIES).reduce((acc, skill) => ({
     ...acc,
-    [skill]: (classConfig.defaultSkills || []).includes(skill)
+    [skill]: (classConfig.defaultSkills || []).includes(skill) || selectedSkills.includes(skill)
   }), {});
 };
 
@@ -297,6 +297,7 @@ export default function App() {
       name: characterData.name,
       class: characterData.class,
       subclass: characterData.subclass || '',
+      classSkills: characterData.classSkills || [],
       level: stats.level,
       race: characterData.race,
       background: characterData.background,
@@ -311,7 +312,7 @@ export default function App() {
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       stats,
-      proficiencies: buildProficiencies(characterData.class),
+      proficiencies: buildProficiencies(characterData.class, characterData.classSkills || []),
       savingThrows: buildSavingThrows(characterData.class),
       conditions: [],
       equipment: classConfig.equipment || DEFAULT_EQUIPMENT,
