@@ -247,30 +247,28 @@ export const DND_CLASSES = {
     description: 'Magical inventor who blends arcane craft with practical tools.'
   },
   Culinarian: {
-    // Confirmed with the DM: d8 Hit Die, Intelligence spellcasting, full-caster slots,
-    // Cook's Utensils proficiency, and light/medium armor proficiency.
     hitDiceSize: 8,
     primaryAbilities: ['intelligence'],
-    savingThrows: [],
+    savingThrows: ['constitution', 'intelligence'],
+    // The handbook says choose two from this list. The creator leaves these for manual selection.
     defaultSkills: [],
-    equipment: [],
+    skillChoices: ['Arcana', 'Insight', 'Medicine', 'Nature', 'Perception', 'Persuasion', 'Survival'],
+    skillChoiceCount: 2,
+    equipment: [
+      { name: "Leather Armor or Scale Mail (choose one)", quantity: 1, description: "Starting armor choice" },
+      { name: "Simple Weapon (choose one)", quantity: 1, description: "Starting weapon choice" },
+      { name: "Cook's Utensils", quantity: 1, description: "Culinarian tool proficiency" },
+      { name: "Explorer's Pack", quantity: 1, description: "Starting adventuring pack" },
+      { name: "Culinary Grimoire", quantity: 1, description: "Recipe spellbook" }
+    ],
     tools: ["Cook's Utensils"],
     armorProficiencies: ['Light Armor', 'Medium Armor'],
-    weaponProficiencies: [],
-    subclasses: ['Confectioner'],
+    weaponProficiencies: ['Simple Weapons'],
+    subclasses: ['Flesh Eater', 'Wild Forager', 'Grand Host', 'Alchemical Gourmand', 'Confectioner'],
     spellcaster: true,
     spellcastingProgression: 'full',
     spellcastingAbility: 'intelligence',
-    description: 'An Intelligence-based magical chef who prepares recipes as spells and channels magic through culinary craft.',
-    dmConfirmationRequired: [
-      'Saving throw proficiencies',
-      'Class skill choices and number of skills',
-      'Starting equipment and weapon proficiencies',
-      'Full base-class feature progression (levels 1–20)',
-      'Recipe learning, preparation, and known/prepared limits',
-      'Spellcasting focus and ritual-casting rules, if any',
-      'Subclass selection timing and any additional subclasses'
-    ]
+    description: 'A full-caster whose magic is expressed through recipes, food, drink, spices, and culinary preparations.'
   },
   Barbarian: {
     hitDiceSize: 12,
