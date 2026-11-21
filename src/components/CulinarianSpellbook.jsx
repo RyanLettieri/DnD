@@ -13,12 +13,12 @@ export default function CulinarianSpellbook({characterId,level=1,intelligence=10
  const intMod=Math.floor((Number(intelligence)-10)/2);
  const preparedCount=Object.entries(prepared).filter(([lvl])=>Number(lvl)>0).reduce((n,[,names])=>n+names.length,0);
  const cantripCount=(grimoire[0]||[]).length;
- const expectedGrimoireRecipes=6+2*Math.max(0,Number(level)-1);
- const leveledKnown=known.filter(x=>x.level>0).length;
  const preparedLimit=Math.max(1,Number(level)+intMod);
  const cantripsKnown=level>=10?5:level>=4?4:3;
  const maxSpellLevel=Math.min(9,Math.ceil(level/2));
  const known=useMemo(()=>Object.entries(grimoire).flatMap(([lvl,names])=>(names||[]).map(name=>({name,level:Number(lvl)}))),[grimoire]);
+ const expectedGrimoireRecipes=6+2*Math.max(0,Number(level)-1);
+ const leveledKnown=known.filter(x=>x.level>0).length;
  const add=(lvl,name)=>{if(!name||known.some(x=>x.name===name))return;if(Number(lvl)===0&&cantripCount>=cantripsKnown)return;setGrimoire(p=>({...p,[lvl]:[...(p[lvl]||[]),name]}));};
  const toggle=(lvl,name)=>{const list=prepared[lvl]||[];const exists=list.includes(name);if(Number(lvl)===0)return;if(!exists&&preparedCount>=preparedLimit)return;setPrepared(p=>({...p,[lvl]:exists?list.filter(x=>x!==name):[...(p[lvl]||[]),name]}));};
  const remove=(lvl,name)=>{setGrimoire(p=>({...p,[lvl]:(p[lvl]||[]).filter(x=>x!==name)}));setPrepared(p=>({...p,[lvl]:(p[lvl]||[]).filter(x=>x!==name)}));};
