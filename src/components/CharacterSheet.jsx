@@ -38,6 +38,7 @@ import SpellSlotTracker from './SpellSlotTracker';
 import FeaturesTracker from './FeaturesTracker';
 import SpellPreparation from './SpellPreparation';
 import InfusionsTracker from './InfusionsTracker';
+import CulinarianFeatures from './CulinarianFeatures';
 import EnhancedActions from './EnhancedActions';
 import EnhancedNotes from './EnhancedNotes';
 import DeathSavingThrows from './DeathSavingThrows';
@@ -424,7 +425,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
   ];
 
   const characterClass = character?.class || stats.class || 'Artificer';
-  const classConfig = DND_CLASSES[characterClass] || DND_CLASSES.Artificer;
+  const classConfig = DND_CLASSES[characterClass] || { spellcaster: false };
   const tabs = [
     { id: 'main', label: 'Character' },
     { id: 'background', label: 'Background' },
@@ -432,6 +433,7 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
     { id: 'actions', label: 'Actions' },
     ...(classConfig.spellcaster ? [{ id: 'spells', label: 'Spells' }] : []),
     ...(characterClass === 'Artificer' ? [{ id: 'infusions', label: 'Infusions' }] : []),
+    ...(characterClass === 'Culinarian' ? [{ id: 'culinarian', label: 'Culinary' }] : []),
     { id: 'skills', label: 'Skills' },
     { id: 'inventory', label: 'Inventory' },
     { id: 'features', label: 'Features' },
@@ -1622,6 +1624,17 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
     );
   };
 
+  const renderCulinarianTab = () => (
+    <CulinarianFeatures
+      characterId={characterId}
+      level={stats.level}
+      proficiencyBonus={stats.proficiencyBonus}
+      intelligence={stats.intelligence}
+      spellSlots={stats.spellSlots || {}}
+      onUpdateSpellSlots={(newSpellSlots) => setStats(prev => ({ ...prev, spellSlots: newSpellSlots }))}
+    />
+  );
+
   const renderInfusionsTab = () => {
     const characterClass = character?.class || stats.class || 'Artificer';
     
@@ -1777,6 +1790,8 @@ const CharacterSheet = ({ characterId, character, onBackToDashboard, darkMode, s
         return classConfig.spellcaster ? renderSpellsTab() : renderMainTab();
       case 'infusions':
         return characterClass === 'Artificer' ? renderInfusionsTab() : renderMainTab();
+      case 'culinarian':
+        return characterClass === 'Culinarian' ? renderCulinarianTab() : renderMainTab();
       case 'skills':
         return renderSkillsTab();
       case 'inventory':
